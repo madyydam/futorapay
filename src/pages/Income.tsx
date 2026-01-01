@@ -105,7 +105,7 @@ export default function Income() {
               ₹1,18,000
             </p>
             <p className="text-xs text-muted-foreground mt-2">
-              Based on AI analysis
+              Based on system analysis
             </p>
           </div>
 
@@ -203,8 +203,8 @@ export default function Income() {
                       <Icon className={cn(
                         "w-6 h-6",
                         source.color.includes("primary") ? "text-primary" :
-                        source.color.includes("accent") ? "text-accent" :
-                        "text-warning"
+                          source.color.includes("accent") ? "text-accent" :
+                            "text-warning"
                       )} />
                     </div>
                     <span className="text-xs text-success font-medium bg-success/10 px-2 py-1 rounded-full">

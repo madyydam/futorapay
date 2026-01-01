@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const settingsGroups = [
   {
@@ -39,6 +40,7 @@ const settingsGroups = [
 
 export default function Profile() {
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const { user, signOut } = useAuth();
 
   return (
     <DashboardLayout>
@@ -55,17 +57,23 @@ export default function Profile() {
         <div className="glass-card-elevated p-6 animate-slide-up">
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <span className="text-3xl font-bold text-primary-foreground">M</span>
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-effect">
+                <span className="text-3xl font-bold text-primary-foreground">
+                  {user?.email?.[0].toUpperCase() || "U"}
+                </span>
               </div>
               <div className="absolute bottom-0 right-0 w-6 h-6 bg-success rounded-full border-4 border-card" />
             </div>
             <div className="text-center sm:text-left flex-1">
-              <h2 className="text-xl font-bold text-foreground">Madhur</h2>
-              <p className="text-muted-foreground">Premium Member</p>
+              <h2 className="text-xl font-bold text-foreground">
+                {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User"}
+              </h2>
+              <p className="text-muted-foreground capitalize">
+                {user?.user_metadata?.role || "Member"}
+              </p>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3">
                 <span className="px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                  Pro Plan
+                  Free Plan
                 </span>
                 <span className="px-3 py-1 text-xs font-medium bg-success/10 text-success rounded-full">
                   Verified
@@ -150,7 +158,10 @@ export default function Profile() {
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </button>
-          <button className="w-full flex items-center justify-between p-4 hover:bg-destructive/10 transition-colors border-t border-border">
+          <button
+            onClick={signOut}
+            className="w-full flex items-center justify-between p-4 hover:bg-destructive/10 transition-colors border-t border-border"
+          >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-destructive/10">
                 <LogOut className="w-4 h-4 text-destructive" />

@@ -120,7 +120,7 @@ export default function Goals() {
             <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/50">
               <Sparkles className="w-5 h-5 text-accent" />
               <p className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">AI Tip:</span> Increase monthly 
+                <span className="text-foreground font-medium">Smart Tip:</span> Increase monthly
                 savings by ₹5,000 to reach goals 3 months earlier
               </p>
             </div>
@@ -148,10 +148,10 @@ export default function Goals() {
                     <Icon className={cn(
                       "w-6 h-6",
                       goal.color.includes("primary") ? "text-primary" :
-                      goal.color.includes("accent") ? "text-accent" :
-                      goal.color.includes("warning") ? "text-warning" :
-                      goal.color.includes("purple") ? "text-purple-400" :
-                      "text-pink-400"
+                        goal.color.includes("accent") ? "text-accent" :
+                          goal.color.includes("warning") ? "text-warning" :
+                            goal.color.includes("purple") ? "text-purple-400" :
+                              "text-pink-400"
                     )} />
                   </div>
                   <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">

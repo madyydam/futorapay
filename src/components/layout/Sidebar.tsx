@@ -10,9 +10,11 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -30,6 +32,7 @@ const bottomNavItems = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { signOut } = useAuth();
 
   return (
     <aside
@@ -40,8 +43,8 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 p-6 border-b border-sidebar-border">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0">
-          <span className="text-primary-foreground font-bold text-lg">F</span>
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 glow-effect">
+          <Wallet className="text-primary-foreground w-6 h-6" />
         </div>
         {!collapsed && (
           <div className="animate-fade-in">
@@ -107,14 +110,27 @@ export function Sidebar() {
         </div>
       </nav>
 
-      {/* Collapse Toggle */}
-      <div className="p-4 border-t border-sidebar-border">
+      {/* Footer Actions */}
+      <div className="p-4 border-t border-sidebar-border space-y-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={signOut}
+          className={cn(
+            "w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors",
+            collapsed ? "justify-center" : "justify-start gap-3"
+          )}
+        >
+          <LogOut className="w-5 h-5" />
+          {!collapsed && <span>Sign Out</span>}
+        </Button>
+
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            "w-full transition-all",
+            "w-full transition-all text-muted-foreground hover:text-foreground",
             collapsed ? "justify-center" : "justify-start gap-3"
           )}
         >

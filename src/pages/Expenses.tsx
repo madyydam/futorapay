@@ -97,16 +97,16 @@ export default function Expenses() {
           </Button>
         </div>
 
-        {/* AI Suggestion */}
+        {/* Smart Suggestion */}
         <div className="glass-card p-4 bg-gradient-to-r from-accent/10 via-card to-primary/10 border-accent/20 animate-slide-up">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-accent/20 flex-shrink-0">
               <Sparkles className="w-5 h-5 text-accent" />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">AI Suggestion</p>
+              <p className="text-sm font-medium text-foreground">Smart Suggestion</p>
               <p className="text-sm text-muted-foreground">
-                You can save ₹3,200 by reducing subscriptions. 
+                You can save ₹3,200 by reducing subscriptions.
                 Consider canceling unused services.
               </p>
             </div>

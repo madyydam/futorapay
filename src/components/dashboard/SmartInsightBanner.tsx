@@ -1,10 +1,10 @@
 import { Lightbulb, Sparkles } from "lucide-react";
 
-interface AIInsightBannerProps {
+interface SmartInsightBannerProps {
   insight: string;
 }
 
-export function AIInsightBanner({ insight }: AIInsightBannerProps) {
+export function SmartInsightBanner({ insight }: SmartInsightBannerProps) {
   return (
     <div className="glass-card-elevated p-5 bg-gradient-to-r from-primary/10 via-card to-accent/10 border-primary/20 animate-slide-up">
       <div className="flex items-start gap-4">

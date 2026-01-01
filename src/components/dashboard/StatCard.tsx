@@ -1,5 +1,6 @@
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { memo } from "react";
 
 interface StatCardProps {
   title: string;
@@ -13,7 +14,7 @@ interface StatCardProps {
   delay?: number;
 }
 
-export function StatCard({
+export const StatCard = memo(function StatCard({
   title,
   value,
   change,
@@ -57,4 +58,4 @@ export function StatCard({
       </div>
     </div>
   );
-}
+});
