@@ -3,7 +3,7 @@ import {
   LayoutDashboard,
   Wallet,
   Target,
-  Bot,
+  TrendingUp,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Wallet, label: "Expenses", path: "/expenses" },
+  { icon: TrendingUp, label: "Income", path: "/income" },
   { icon: Target, label: "Goals", path: "/goals" },
-  { icon: Bot, label: "AI", path: "/assistant" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
 

@@ -31,10 +31,9 @@ const Index = () => {
           </p>
         </div>
 
-        {/* AI Insight Banner */}
+        {/* Smart Insight Banner */}
         <AIInsightBanner
           insight="You've spent 18% more on food this month compared to last month. Consider meal planning to reduce expenses."
-          action="Get Tips"
         />
 
         {/* Stats Grid */}
