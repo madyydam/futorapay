@@ -4,14 +4,12 @@ import {
   LayoutDashboard,
   Wallet,
   Target,
-  Bot,
   User,
   TrendingUp,
   Bell,
   Settings,
   ChevronLeft,
   ChevronRight,
-  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,7 +19,6 @@ const navItems = [
   { icon: Wallet, label: "Expenses", path: "/expenses" },
   { icon: TrendingUp, label: "Income", path: "/income" },
   { icon: Target, label: "Goals", path: "/goals" },
-  { icon: Bot, label: "AI Assistant", path: "/assistant" },
 ];
 
 const bottomNavItems = [
@@ -48,8 +45,7 @@ export function Sidebar() {
         </div>
         {!collapsed && (
           <div className="animate-fade-in">
-            <h1 className="font-bold text-lg text-foreground">Futora</h1>
-            <p className="text-xs text-muted-foreground">Finance</p>
+            <h1 className="font-bold text-lg gradient-text">FutoraPay</h1>
           </div>
         )}
       </div>

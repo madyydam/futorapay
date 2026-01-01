@@ -7,7 +7,6 @@ import Index from "./pages/Index";
 import Expenses from "./pages/Expenses";
 import Income from "./pages/Income";
 import Goals from "./pages/Goals";
-import Assistant from "./pages/Assistant";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -24,7 +23,6 @@ const App = () => (
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/income" element={<Income />} />
           <Route path="/goals" element={<Goals />} />
-          <Route path="/assistant" element={<Assistant />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
