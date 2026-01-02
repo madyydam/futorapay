@@ -16,8 +16,12 @@ const formSchema = z.object({
     phone: z.string().optional(),
 });
 
-export function EditProfileDialog() {
-    const [open, setOpen] = useState(false);
+interface EditProfileDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}
+
+export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps) {
     const { user } = useAuth();
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -40,7 +44,7 @@ export function EditProfileDialog() {
             if (error) throw error;
 
             toast.success("Profile updated successfully");
-            setOpen(false);
+            onOpenChange(false);
             // Force a reload or wait for auth state change to reflect updates
             window.location.reload();
         } catch (error: any) {
@@ -49,10 +53,7 @@ export function EditProfileDialog() {
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline">Edit Profile</Button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Edit Profile</DialogTitle>

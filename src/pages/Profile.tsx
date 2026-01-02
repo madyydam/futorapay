@@ -1,5 +1,6 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   User,
   Mail,
@@ -26,6 +27,8 @@ export default function Profile() {
     return savedTheme ? savedTheme === "dark" : true;
   });
 
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+
   const { user, signOut } = useAuth();
 
   useEffect(() => {
@@ -45,18 +48,53 @@ export default function Profile() {
     {
       title: "Account",
       items: [
-        { icon: User, label: "Personal Information", value: user?.user_metadata?.full_name || "Not set" },
-        { icon: Mail, label: "Email", value: user?.email || "Not set" },
-        { icon: Phone, label: "Phone", value: user?.user_metadata?.phone || user?.phone || "Not set" },
-        { icon: Globe, label: "Language", value: "English" },
+        {
+          icon: User,
+          label: "Personal Information",
+          value: user?.user_metadata?.full_name || "Not set",
+          onClick: () => setEditProfileOpen(true)
+        },
+        {
+          icon: Mail,
+          label: "Email",
+          value: user?.email || "Not set",
+          onClick: () => toast.info("To change your email, please contact support.")
+        },
+        {
+          icon: Phone,
+          label: "Phone",
+          value: user?.user_metadata?.phone || user?.phone || "Not set",
+          onClick: () => setEditProfileOpen(true)
+        },
+        {
+          icon: Globe,
+          label: "Language",
+          value: "English",
+          onClick: () => toast.info("Language options are coming soon!")
+        },
       ],
     },
     {
       title: "Preferences",
       items: [
-        { icon: CreditCard, label: "Currency", value: "INR (₹)" },
-        { icon: Bell, label: "Notifications", value: "Enabled" },
-        { icon: Shield, label: "Security", value: "2FA Enabled" },
+        {
+          icon: CreditCard,
+          label: "Currency",
+          value: "INR (₹)",
+          onClick: () => toast.info("Currency selection coming soon!")
+        },
+        {
+          icon: Bell,
+          label: "Notifications",
+          value: "Enabled",
+          onClick: () => toast.success("Notifications are enabled.")
+        },
+        {
+          icon: Shield,
+          label: "Security",
+          value: "2FA Enabled",
+          onClick: () => toast.info("Security settings are managed by your provider.")
+        },
       ],
     },
   ];
@@ -99,8 +137,8 @@ export default function Profile() {
                 </span>
               </div>
             </div>
-            {/* <Button variant="outline">Edit Profile</Button> */}
-            <EditProfileDialog />
+            <Button variant="outline" onClick={() => setEditProfileOpen(true)}>Edit Profile</Button>
+            <EditProfileDialog open={editProfileOpen} onOpenChange={setEditProfileOpen} />
           </div>
         </div>
 
@@ -149,6 +187,7 @@ export default function Profile() {
               {group.items.map((item) => (
                 <button
                   key={item.label}
+                  onClick={item.onClick}
                   className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
                 >
                   <div className="flex items-center gap-3">

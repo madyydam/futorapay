@@ -55,7 +55,7 @@
     --gradient-primary: linear-gradient(135deg, hsl(187 100% 50%) 0%, hsl(160 100% 45%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(220 25% 12%) 0%, hsl(220 25% 8%) 100%);
     --gradient-glow: radial-gradient(ellipse at center, hsl(187 100% 50% / 0.15) 0%, transparent 70%);
-    
+
     --shadow-glow: 0 0 40px hsl(187 100% 50% / 0.2);
     --shadow-card: 0 4px 24px hsl(220 30% 0% / 0.4);
     --shadow-elevated: 0 8px 32px hsl(220 30% 0% / 0.6);
@@ -112,7 +112,7 @@
     --gradient-primary: linear-gradient(135deg, hsl(187 100% 40%) 0%, hsl(160 100% 35%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(220 15% 98%) 100%);
     --gradient-glow: radial-gradient(ellipse at center, hsl(187 100% 40% / 0.1) 0%, transparent 70%);
-    
+
     --shadow-glow: 0 0 40px hsl(187 100% 40% / 0.15);
     --shadow-card: 0 4px 24px hsl(220 30% 0% / 0.08);
     --shadow-elevated: 0 8px 32px hsl(220 30% 0% / 0.12);
@@ -124,12 +124,24 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold tracking-tight;
   }
 }
@@ -166,10 +178,12 @@
 
   .animate-slide-up {
     animation: slide-up 0.5s ease-out forwards;
+    will-change: transform, opacity;
   }
 
   .animate-fade-in {
     animation: fade-in 0.3s ease-out forwards;
+    will-change: opacity;
   }
 
   .stat-card {
@@ -206,7 +220,8 @@
 
   @media (max-width: 768px) {
     .mobile-optimized-input {
-      font-size: 16px !important; /* Prevents iOS zoom on input focus */
+      font-size: 16px !important;
+      /* Prevents iOS zoom on input focus */
       min-height: 48px;
     }
 
@@ -221,18 +236,24 @@
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px hsl(187 100% 50% / 0.3);
   }
+
   50% {
     box-shadow: 0 0 40px hsl(187 100% 50% / 0.5);
   }
@@ -243,6 +264,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -253,6 +275,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

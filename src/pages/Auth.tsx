@@ -14,7 +14,7 @@ import {
     CardTitle
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wallet, LogIn, UserPlus, Github, CheckCircle2, ArrowRight } from "lucide-react";
+import { Wallet, LogIn, UserPlus, Github, CheckCircle2, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 
 
@@ -23,6 +23,7 @@ export default function Auth() {
     const [password, setPassword] = useState("");
     const [fullName, setFullName] = useState("");
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -38,6 +39,25 @@ export default function Auth() {
             navigate("/");
         } catch (error: any) {
             toast.error(error.message || "Failed to sign in");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        if (!email) {
+            toast.error("Please enter your email address first");
+            return;
+        }
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/auth?type=recovery`,
+            });
+            if (error) throw error;
+            toast.success("Password reset instructions sent to your email");
+        } catch (error: any) {
+            toast.error(error.message || "Failed to send reset email");
         } finally {
             setLoading(false);
         }
@@ -178,16 +198,36 @@ export default function Auth() {
                                         <div className="space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <Label htmlFor="password">Password</Label>
-                                                <button type="button" className="text-xs text-primary hover:underline">Forgot password?</button>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleResetPassword}
+                                                    className="text-xs text-primary hover:underline"
+                                                    disabled={loading}
+                                                >
+                                                    Forgot password?
+                                                </button>
                                             </div>
-                                            <Input
-                                                id="password"
-                                                type="password"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                required
-                                                className="bg-background/50 mobile-optimized-input"
-                                            />
+                                            <div className="relative">
+                                                <Input
+                                                    id="password"
+                                                    type={showPassword ? "text" : "password"}
+                                                    value={password}
+                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    required
+                                                    className="bg-background/50 mobile-optimized-input pr-10"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="h-4 w-4" />
+                                                    ) : (
+                                                        <Eye className="h-4 w-4" />
+                                                    )}
+                                                </button>
+                                            </div>
                                         </div>
                                     </CardContent>
                                     <CardFooter className="flex flex-col space-y-4">
@@ -237,15 +277,28 @@ export default function Auth() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="password-signup">Password</Label>
-                                            <Input
-                                                id="password-signup"
-                                                type="password"
-                                                placeholder="••••••••"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                required
-                                                className="bg-background/50 mobile-optimized-input"
-                                            />
+                                            <div className="relative">
+                                                <Input
+                                                    id="password-signup"
+                                                    type={showPassword ? "text" : "password"}
+                                                    placeholder="••••••••"
+                                                    value={password}
+                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    required
+                                                    className="bg-background/50 mobile-optimized-input pr-10"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="h-4 w-4" />
+                                                    ) : (
+                                                        <Eye className="h-4 w-4" />
+                                                    )}
+                                                </button>
+                                            </div>
                                         </div>
                                     </CardContent>
                                     <CardFooter className="flex flex-col space-y-4">
