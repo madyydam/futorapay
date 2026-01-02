@@ -2,75 +2,65 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
-  Plus,
   Target,
-  Plane,
-  Laptop,
-  Shield,
-  GraduationCap,
   Car,
+  Home,
+  Plane,
+  Smartphone,
+  GraduationCap,
+  Gem,
+  MoreVertical,
+  Plus,
+  Trash2,
   TrendingUp,
-  Sparkles,
+  Loader2,
+  Inbox
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useGoals } from "@/hooks/useGoals";
+import { AddGoalDialog } from "@/components/dashboard/AddGoalDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
-const goals = [
-  {
-    id: 1,
-    name: "Emergency Fund",
-    target: 300000,
-    current: 185000,
-    icon: Shield,
-    color: "from-primary to-cyan-400",
-    deadline: "Dec 2025",
-    monthlyTarget: 12000,
-  },
-  {
-    id: 2,
-    name: "New MacBook Pro",
-    target: 200000,
-    current: 125000,
-    icon: Laptop,
-    color: "from-accent to-emerald-400",
-    deadline: "Mar 2025",
-    monthlyTarget: 25000,
-  },
-  {
-    id: 3,
-    name: "Dream Vacation",
-    target: 150000,
-    current: 45000,
-    icon: Plane,
-    color: "from-warning to-orange-400",
-    deadline: "Jun 2025",
-    monthlyTarget: 17500,
-  },
-  {
-    id: 4,
-    name: "Higher Education",
-    target: 500000,
-    current: 180000,
-    icon: GraduationCap,
-    color: "from-purple-500 to-violet-400",
-    deadline: "Dec 2026",
-    monthlyTarget: 15000,
-  },
-  {
-    id: 5,
-    name: "Car Down Payment",
-    target: 250000,
-    current: 75000,
-    icon: Car,
-    color: "from-pink-500 to-rose-400",
-    deadline: "Sep 2025",
-    monthlyTarget: 20000,
-  },
-];
+const ICON_MAP: Record<string, any> = {
+  Target, Car, Home, Plane, Smartphone, GraduationCap, Gem
+};
 
 export default function Goals() {
-  const totalSaved = goals.reduce((sum, goal) => sum + goal.current, 0);
-  const totalTarget = goals.reduce((sum, goal) => sum + goal.target, 0);
-  const overallProgress = (totalSaved / totalTarget) * 100;
+  const { goals, isLoading, deleteGoal, addSavings } = useGoals();
+  const [addMoneyOpen, setAddMoneyOpen] = useState<string | null>(null);
+  const [amountToAdd, setAmountToAdd] = useState("");
+
+  const handleAddSavings = async (id: string) => {
+    if (!amountToAdd || isNaN(Number(amountToAdd))) return;
+
+    try {
+      await addSavings.mutateAsync({ id, amount: Number(amountToAdd) });
+      setAddMoneyOpen(null);
+      setAmountToAdd("");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const totalSavings = goals?.reduce((acc, goal) => acc + Number(goal.current_amount), 0) || 0;
+  const totalTarget = goals?.reduce((acc, goal) => acc + Number(goal.target_amount), 0) || 0;
+  const overallProgress = totalTarget > 0 ? (totalSavings / totalTarget) * 100 : 0;
 
   return (
     <DashboardLayout>
@@ -80,118 +70,152 @@ export default function Goals() {
           <div className="space-y-1 animate-fade-in">
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Savings Goals</h1>
             <p className="text-muted-foreground">
-              Track progress towards your financial milestones
+              Track and achieve your financial dreams
             </p>
           </div>
-          <Button variant="gradient" className="gap-2 shrink-0">
-            <Plus className="w-4 h-4" />
-            Create Goal
-          </Button>
+          <AddGoalDialog />
         </div>
 
-        {/* Overall Progress Card */}
-        <div className="glass-card-elevated p-6 bg-gradient-to-br from-primary/5 via-card to-accent/5 animate-slide-up">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-4 flex-1">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20">
-                  <Target className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg text-foreground">Overall Progress</h3>
-                  <p className="text-sm text-muted-foreground">Across all savings goals</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    ₹{(totalSaved / 100000).toFixed(1)}L saved
-                  </span>
-                  <span className="text-foreground font-medium">
-                    ₹{(totalTarget / 100000).toFixed(1)}L target
-                  </span>
-                </div>
-                <Progress value={overallProgress} className="h-3" />
-                <p className="text-sm text-primary font-medium">
-                  {overallProgress.toFixed(1)}% complete
-                </p>
+        {/* Overview Card */}
+        <div className="glass-card p-6 bg-gradient-to-r from-primary/10 via-card to-accent/10 border-primary/20 animate-slide-up">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold text-foreground">Total Savings</h2>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-foreground">
+                  ₹{totalSavings.toLocaleString()}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  of ₹{totalTarget.toLocaleString()} goal
+                </span>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/50">
-              <Sparkles className="w-5 h-5 text-accent" />
-              <p className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">Smart Tip:</span> Increase monthly
-                savings by ₹5,000 to reach goals 3 months earlier
-              </p>
+
+            <div className="flex-1 max-w-md space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Overall Progress</span>
+                <span className="font-medium text-primary">{Math.round(overallProgress)}%</span>
+              </div>
+              <Progress value={overallProgress} className="h-3" />
             </div>
           </div>
         </div>
 
         {/* Goals Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {goals.map((goal, index) => {
-            const progress = (goal.current / goal.target) * 100;
-            const Icon = goal.icon;
-
-            return (
-              <div
-                key={goal.id}
-                className="glass-card p-5 hover:scale-[1.02] transition-all duration-300 animate-slide-up"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={cn(
-                    "p-3 rounded-xl bg-gradient-to-br",
-                    goal.color.replace("from-", "from-").replace("to-", "to-"),
-                    "opacity-20"
-                  )}>
-                    <Icon className={cn(
-                      "w-6 h-6",
-                      goal.color.includes("primary") ? "text-primary" :
-                        goal.color.includes("accent") ? "text-accent" :
-                          goal.color.includes("warning") ? "text-warning" :
-                            goal.color.includes("purple") ? "text-purple-400" :
-                              "text-pink-400"
-                    )} />
-                  </div>
-                  <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
-                    {goal.deadline}
-                  </span>
-                </div>
-
-                <h3 className="font-semibold text-foreground mb-1">{goal.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Save ₹{goal.monthlyTarget.toLocaleString()}/month to reach goal
-                </p>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-foreground">
-                      ₹{goal.current.toLocaleString()}
-                    </span>
-                    <span className="text-muted-foreground">
-                      ₹{goal.target.toLocaleString()}
-                    </span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
-                  <div className="flex items-center gap-1 text-xs">
-                    <TrendingUp className="w-3 h-3 text-success" />
-                    <span className="text-success font-medium">{progress.toFixed(0)}%</span>
-                    <span className="text-muted-foreground">complete</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Add Goal Card */}
-          <button className="glass-card p-5 border-2 border-dashed border-border hover:border-primary/50 hover:bg-secondary/30 transition-all duration-300 flex flex-col items-center justify-center gap-3 min-h-[200px]">
-            <div className="p-3 rounded-xl bg-secondary">
-              <Plus className="w-6 h-6 text-muted-foreground" />
+        {isLoading ? (
+          <div className="flex justify-center p-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : goals.length === 0 ? (
+          <div className="glass-card p-12 text-center flex flex-col items-center justify-center animate-fade-in space-y-4">
+            <div className="p-4 rounded-full bg-secondary">
+              <Target className="w-10 h-10 text-muted-foreground" />
             </div>
-            <span className="text-muted-foreground font-medium">Add New Goal</span>
-          </button>
-        </div>
+            <div>
+              <h3 className="text-lg font-medium text-foreground">No goals yet</h3>
+              <p className="text-muted-foreground">Create a new savings goal to get started!</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {goals.map((goal, index) => {
+              const Icon = ICON_MAP[goal.icon] || Target;
+              const progress = (Number(goal.current_amount) / Number(goal.target_amount)) * 100;
+              const isCompleted = progress >= 100;
+
+              return (
+                <div
+                  key={goal.id}
+                  className="glass-card p-6 hover:scale-[1.01] transition-all duration-300 animate-slide-up group"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={cn("p-3 rounded-xl bg-opacity-10", goal.color.replace('text-', 'bg-'))}>
+                      <Icon className={cn("w-6 h-6", goal.color)} />
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="glass-card-elevated">
+                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => deleteGoal.mutate(goal.id)}>
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete Goal
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <h3 className="font-semibold text-lg text-foreground mb-1">{goal.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Target: {new Date(goal.deadline).toLocaleDateString()}
+                  </p>
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-2xl font-bold text-foreground">
+                          ₹{Number(goal.current_amount).toLocaleString()}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          of ₹{Number(goal.target_amount).toLocaleString()}
+                        </p>
+                      </div>
+                      <span className={cn(
+                        "text-sm font-semibold px-2 py-1 rounded-full",
+                        isCompleted ? "bg-success/20 text-success" : "bg-secondary text-primary"
+                      )}>
+                        {Math.round(progress)}%
+                      </span>
+                    </div>
+
+                    <Progress
+                      value={progress}
+                      className="h-2"
+                    // indicatorClassName={goal.color.replace('text-', 'bg-')} // Pass color dynamically if Progress component supported it, usually controlled by CSS vars or className
+                    />
+
+                    <Dialog open={addMoneyOpen === goal.id} onOpenChange={(open) => setAddMoneyOpen(open ? goal.id : null)}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full hover:bg-primary/10 hover:text-primary transition-colors border-primary/20"
+                          disabled={isCompleted}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          {isCompleted ? "Goal Reached!" : "Add Savings"}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-xs glass-card-elevated">
+                        <DialogHeader>
+                          <DialogTitle>Add Savings</DialogTitle>
+                          <DialogDescription>Add money to {goal.name}</DialogDescription>
+                        </DialogHeader>
+                        <div className="py-2">
+                          <Input
+                            type="number"
+                            placeholder="Amount"
+                            value={amountToAdd}
+                            onChange={(e) => setAmountToAdd(e.target.value)}
+                            className="text-lg"
+                          />
+                        </div>
+                        <DialogFooter>
+                          <Button onClick={() => handleAddSavings(goal.id)} disabled={addSavings.isPending}>
+                            {addSavings.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                            Add
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

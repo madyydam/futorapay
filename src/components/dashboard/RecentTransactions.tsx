@@ -6,18 +6,30 @@ import {
   Film,
   ArrowUpRight,
   ArrowDownRight,
-  Inbox
+  Inbox,
+  Briefcase,
+  Home,
+  TrendingUp,
+  Building2,
+  HelpCircle,
+  Laptop
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTransactions } from "@/hooks/useTransactions";
 import { memo } from "react";
 
-const categoryIcons = {
+const categoryIcons: Record<string, any> = {
   shopping: ShoppingBag,
   food: Utensils,
   transport: Car,
   utilities: Zap,
   entertainment: Film,
+  housing: Home,
+  salary: Briefcase,
+  freelance: Laptop,
+  investment: TrendingUp,
+  rental: Building2,
+  other: HelpCircle,
 };
 
 export const RecentTransactions = memo(function RecentTransactions() {
@@ -60,7 +72,8 @@ export const RecentTransactions = memo(function RecentTransactions() {
           </div>
         ) : (
           displayTransactions.map((transaction, index) => {
-            const Icon = categoryIcons[transaction.category as keyof typeof categoryIcons] || ShoppingBag;
+            const categoryKey = transaction.category.toLowerCase();
+            const Icon = categoryIcons[categoryKey] || categoryIcons.other || ShoppingBag;
             const isIncome = transaction.type === 'income';
 
             return (

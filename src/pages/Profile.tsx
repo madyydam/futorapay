@@ -15,32 +15,51 @@ import {
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-
-const settingsGroups = [
-  {
-    title: "Account",
-    items: [
-      { icon: User, label: "Personal Information", value: "Madhur" },
-      { icon: Mail, label: "Email", value: "madhur@example.com" },
-      { icon: Phone, label: "Phone", value: "+91 98765 43210" },
-      { icon: Globe, label: "Language", value: "English" },
-    ],
-  },
-  {
-    title: "Preferences",
-    items: [
-      { icon: CreditCard, label: "Currency", value: "INR (₹)" },
-      { icon: Bell, label: "Notifications", value: "Enabled" },
-      { icon: Shield, label: "Security", value: "2FA Enabled" },
-    ],
-  },
-];
+import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
 
 export default function Profile() {
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check localStorage or system preference
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme ? savedTheme === "dark" : true;
+  });
+
   const { user, signOut } = useAuth();
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDarkMode) {
+      root.classList.remove("light");
+      root.classList.add("dark"); // Optional, if you use dark: variant
+      localStorage.setItem("theme", "dark");
+    } else {
+      root.classList.remove("dark");
+      root.classList.add("light");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDarkMode]);
+
+  const settingsGroups = [
+    {
+      title: "Account",
+      items: [
+        { icon: User, label: "Personal Information", value: user?.user_metadata?.full_name || "Not set" },
+        { icon: Mail, label: "Email", value: user?.email || "Not set" },
+        { icon: Phone, label: "Phone", value: user?.user_metadata?.phone || user?.phone || "Not set" },
+        { icon: Globe, label: "Language", value: "English" },
+      ],
+    },
+    {
+      title: "Preferences",
+      items: [
+        { icon: CreditCard, label: "Currency", value: "INR (₹)" },
+        { icon: Bell, label: "Notifications", value: "Enabled" },
+        { icon: Shield, label: "Security", value: "2FA Enabled" },
+      ],
+    },
+  ];
 
   return (
     <DashboardLayout>
@@ -80,7 +99,8 @@ export default function Profile() {
                 </span>
               </div>
             </div>
-            <Button variant="outline">Edit Profile</Button>
+            {/* <Button variant="outline">Edit Profile</Button> */}
+            <EditProfileDialog />
           </div>
         </div>
 

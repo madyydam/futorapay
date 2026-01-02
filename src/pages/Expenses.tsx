@@ -2,7 +2,6 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import {
-  Plus,
   Filter,
   Search,
   ShoppingBag,
@@ -12,73 +11,37 @@ import {
   Film,
   Home,
   Sparkles,
+  Briefcase,
+  HelpCircle,
+  Loader2,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTransactions } from "@/hooks/useTransactions";
+import { AddTransactionDialog } from "@/components/dashboard/AddTransactionDialog";
 
-const categoryIcons = {
+const categoryIcons: Record<string, { icon: any; color: string; bg: string }> = {
   shopping: { icon: ShoppingBag, color: "text-primary", bg: "bg-primary/10" },
   food: { icon: Utensils, color: "text-accent", bg: "bg-accent/10" },
   transport: { icon: Car, color: "text-warning", bg: "bg-warning/10" },
   utilities: { icon: Zap, color: "text-purple-400", bg: "bg-purple-400/10" },
   entertainment: { icon: Film, color: "text-pink-400", bg: "bg-pink-400/10" },
   housing: { icon: Home, color: "text-blue-400", bg: "bg-blue-400/10" },
+  salary: { icon: Briefcase, color: "text-success", bg: "bg-success/10" },
+  other: { icon: HelpCircle, color: "text-muted-foreground", bg: "bg-secondary" },
 };
 
-const expenses = [
-  {
-    id: 1,
-    name: "Amazon Purchase",
-    category: "shopping" as keyof typeof categoryIcons,
-    amount: 4599,
-    date: "Dec 28, 2025",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: 2,
-    name: "Grocery Shopping",
-    category: "food" as keyof typeof categoryIcons,
-    amount: 2850,
-    date: "Dec 27, 2025",
-    paymentMethod: "UPI",
-  },
-  {
-    id: 3,
-    name: "Electricity Bill",
-    category: "utilities" as keyof typeof categoryIcons,
-    amount: 3200,
-    date: "Dec 26, 2025",
-    paymentMethod: "Auto Debit",
-  },
-  {
-    id: 4,
-    name: "Uber Rides",
-    category: "transport" as keyof typeof categoryIcons,
-    amount: 1560,
-    date: "Dec 25, 2025",
-    paymentMethod: "Wallet",
-  },
-  {
-    id: 5,
-    name: "Netflix & Spotify",
-    category: "entertainment" as keyof typeof categoryIcons,
-    amount: 1148,
-    date: "Dec 24, 2025",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: 6,
-    name: "House Rent",
-    category: "housing" as keyof typeof categoryIcons,
-    amount: 25000,
-    date: "Dec 1, 2025",
-    paymentMethod: "Bank Transfer",
-  },
-];
-
-const categories = ["All", "Food", "Shopping", "Transport", "Utilities", "Entertainment", "Housing"];
+const categories = ["Food", "Shopping", "Transport", "Utilities", "Entertainment", "Housing", "Other"];
 
 export default function Expenses() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const { transactions, isLoading, deleteTransaction } = useTransactions();
+
+  const filteredExpenses = transactions
+    ?.filter(t => t.type === 'expense')
+    .filter(t => activeCategory === "All" || t.category.toLowerCase() === activeCategory.toLowerCase())
+    .filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <DashboardLayout>
@@ -91,10 +54,7 @@ export default function Expenses() {
               Track and manage your spending
             </p>
           </div>
-          <Button variant="gradient" className="gap-2 shrink-0">
-            <Plus className="w-4 h-4" />
-            Add Expense
-          </Button>
+          <AddTransactionDialog type="expense" categories={categories} />
         </div>
 
         {/* Smart Suggestion */}
@@ -106,8 +66,7 @@ export default function Expenses() {
             <div>
               <p className="text-sm font-medium text-foreground">Smart Suggestion</p>
               <p className="text-sm text-muted-foreground">
-                You can save ₹3,200 by reducing subscriptions.
-                Consider canceling unused services.
+                Track your expenses regularly to get personalized money-saving tips!
               </p>
             </div>
           </div>
@@ -120,6 +79,8 @@ export default function Expenses() {
             <input
               type="text"
               placeholder="Search expenses..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-secondary border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             />
           </div>
@@ -131,6 +92,17 @@ export default function Expenses() {
 
         {/* Category Pills */}
         <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setActiveCategory("All")}
+            className={cn(
+              "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
+              activeCategory === "All"
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+            )}
+          >
+            All
+          </button>
           {categories.map((category) => (
             <button
               key={category}
@@ -148,42 +120,69 @@ export default function Expenses() {
         </div>
 
         {/* Expenses List */}
-        <div className="glass-card divide-y divide-border animate-slide-up">
-          {expenses.map((expense, index) => {
-            const categoryData = categoryIcons[expense.category];
-            const Icon = categoryData.icon;
+        {isLoading ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : filteredExpenses && filteredExpenses.length > 0 ? (
+          <div className="glass-card divide-y divide-border animate-slide-up">
+            {filteredExpenses.map((expense, index) => {
+              const categoryKey = expense.category.toLowerCase();
+              const categoryData = categoryIcons[categoryKey] || categoryIcons.other;
+              const Icon = categoryData.icon;
 
-            return (
-              <div
-                key={expense.id}
-                className="p-4 lg:p-5 flex items-center justify-between hover:bg-secondary/30 transition-colors"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={cn("p-3 rounded-xl", categoryData.bg)}>
-                    <Icon className={cn("w-5 h-5", categoryData.color)} />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{expense.name}</p>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>{expense.date}</span>
-                      <span>•</span>
-                      <span>{expense.paymentMethod}</span>
+              return (
+                <div
+                  key={expense.id}
+                  className="p-4 lg:p-5 flex items-center justify-between hover:bg-secondary/30 transition-colors"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={cn("p-3 rounded-xl", categoryData.bg)}>
+                      <Icon className={cn("w-5 h-5", categoryData.color)} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{expense.name}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{new Date(expense.date).toLocaleDateString()}</span>
+                        <span>•</span>
+                        <span>{expense.payment_method}</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="text-right flex items-center gap-4">
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        -₹{Number(expense.amount).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {expense.category}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      onClick={() => {
+                        if (confirm('Are you sure you want to delete this expense?')) {
+                          deleteTransaction.mutate(expense.id);
+                        }
+                      }}
+                      disabled={deleteTransaction.isPending}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-foreground">
-                    -₹{expense.amount.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground capitalize">
-                    {expense.category}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center p-12 glass-card">
+            <p className="text-muted-foreground">No expenses found.</p>
+            <p className="text-sm text-muted-foreground/50 mt-1">Add an expense to get started!</p>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
