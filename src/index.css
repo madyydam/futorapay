@@ -193,6 +193,31 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Mobile Optimizations */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  @media (max-width: 768px) {
+    .mobile-optimized-input {
+      font-size: 16px !important; /* Prevents iOS zoom on input focus */
+      min-height: 48px;
+    }
+
+    .mobile-card-padding {
+      padding: 1.5rem !important;
+    }
+
+    .mobile-hidden {
+      display: none !important;
+    }
+  }
 }
 
 @keyframes float {

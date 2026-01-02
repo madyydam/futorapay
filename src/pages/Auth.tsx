@@ -74,10 +74,10 @@ export default function Auth() {
     return (
         <div className="min-h-screen bg-background flex flex-col">
             {/* Hero Section / Login Area */}
-            <main className="flex-grow flex flex-col lg:flex-row items-center justify-center p-4 lg:p-8 gap-12 max-w-7xl mx-auto w-full">
+            <main className="flex-grow flex flex-col lg:flex-row items-center justify-center p-4 lg:p-8 gap-8 lg:gap-12 max-w-7xl mx-auto w-full">
 
-                {/* Left Side: Brand & SEO Content */}
-                <div className="flex-1 space-y-8 text-center lg:text-left animate-fade-in max-w-2xl">
+                {/* Left Side: Brand & SEO Content - HIDDEN ON MOBILE */}
+                <div className="hidden lg:flex flex-1 space-y-8 text-left animate-fade-in max-w-2xl">
                     <div className="space-y-4">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium border border-primary/20">
                             Built by Futora Group of Companies
@@ -85,12 +85,12 @@ export default function Auth() {
                         <h1 className="text-4xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight">
                             FutoraPay – Smart Financial Management <span className="gradient-text">Made Simple</span>
                         </h1>
-                        <p className="text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto lg:mx-0">
+                        <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
                             FutoraPay is an AI-powered financial management platform designed for modern individuals & businesses. Track, plan, and grow smarter with the Futora ecosystem.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="flex items-start gap-3 p-4 rounded-xl glass-card border-none">
                             <CheckCircle2 className="w-5 h-5 text-accent mt-1" />
                             <div>
@@ -107,7 +107,7 @@ export default function Auth() {
                         </div>
                     </div>
 
-                    <div className="hidden lg:flex items-center gap-4 pt-4">
+                    <div className="flex items-center gap-4 pt-4">
                         <div className="flex -space-x-4">
                             {[1, 2, 3, 4].map(i => (
                                 <div key={i} className="w-10 h-10 rounded-full border-2 border-background bg-secondary flex items-center justify-center text-xs font-bold overflow-hidden">
@@ -122,9 +122,17 @@ export default function Auth() {
                     </div>
                 </div>
 
-                {/* Right Side: Auth Form */}
-                <div className="w-full max-w-md animate-slide-up bg-card/50 backdrop-blur-xl p-1 rounded-2xl border border-border/50 shadow-2xl" style={{ animationDelay: "200ms" }}>
-                    <div className="flex items-center justify-center gap-2 mb-6 pt-6">
+                {/* Right Side: Auth Form - Optimized for Mobile */}
+                <div className="w-full max-w-md animate-slide-up bg-card/95 backdrop-blur-xl p-6 lg:p-8 rounded-2xl border border-border/50 shadow-2xl">
+                    {/* Mobile-Only Logo */}
+                    <div className="flex lg:hidden items-center justify-center gap-2 mb-6">
+                        <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
+                            <Wallet className="text-primary-foreground w-6 h-6" />
+                        </div>
+                        <span className="text-2xl font-bold gradient-text">FutoraPay</span>
+                    </div>
+                    {/* Desktop Logo */}
+                    <div className="hidden lg:flex items-center justify-center gap-2 mb-6 pt-6">
                         <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
                             <Wallet className="w-6 h-6 text-primary-foreground" />
                         </div>
@@ -154,7 +162,7 @@ export default function Auth() {
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 required
-                                                className="bg-background/50"
+                                                className="bg-background/50 mobile-optimized-input"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -168,7 +176,7 @@ export default function Auth() {
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
                                                 required
-                                                className="bg-background/50"
+                                                className="bg-background/50 mobile-optimized-input"
                                             />
                                         </div>
                                     </CardContent>
