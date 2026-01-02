@@ -16,6 +16,7 @@ import {
   Sparkles,
   FileText,
   Brain,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const navItems = [
   { icon: Wallet, label: "Expenses", path: "/expenses" },
   { icon: TrendingUp, label: "Income", path: "/income" },
   { icon: Target, label: "Goals", path: "/goals" },
+  { icon: RefreshCw, label: "Subscriptions", path: "/subscriptions" },
   { icon: Sparkles, label: "Scenario", path: "/scenario" },
   { icon: FileText, label: "Reports", path: "/reports" },
   { icon: Brain, label: "Insights", path: "/insights" },

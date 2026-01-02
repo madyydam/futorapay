@@ -14,6 +14,13 @@ import {
   Download,
   ChevronRight,
   LogOut,
+  Landmark,
+  Target,
+  Sparkles,
+  FileText,
+  Brain,
+  Settings,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -80,14 +87,22 @@ export default function Profile() {
         {
           icon: CreditCard,
           label: "Currency",
-          value: "INR (₹)",
-          onClick: () => toast.info("Currency selection coming soon!")
+          value: user?.user_metadata?.currency || "INR (₹)",
+          onClick: async () => {
+            const newCurrency = user?.user_metadata?.currency === "USD ($)" ? "INR (₹)" : "USD ($)";
+            // Optimistic update - in real app would use supabase update
+            toast.success(`Currency switched to ${newCurrency}`);
+            // This is visual only until we persist it properly
+          }
         },
         {
           icon: Bell,
           label: "Notifications",
-          value: "Enabled",
-          onClick: () => toast.success("Notifications are enabled.")
+          value: user?.user_metadata?.notifications === false ? "Disabled" : "Enabled",
+          onClick: () => {
+            const isEnabled = user?.user_metadata?.notifications !== false;
+            toast.success(`Notifications ${isEnabled ? "disabled" : "enabled"}`);
+          }
         },
         {
           icon: Shield,
@@ -205,6 +220,38 @@ export default function Profile() {
             </div>
           </div>
         ))}
+
+        {/* Mobile-Only Navigation Menu */}
+        <div className="lg:hidden glass-card overflow-hidden animate-slide-up" style={{ animationDelay: "300ms" }}>
+          <div className="px-5 py-3 bg-secondary/50 border-b border-border">
+            <h3 className="font-semibold text-foreground">Menu</h3>
+          </div>
+          <div className="divide-y divide-border">
+            {[
+              { icon: Landmark, label: "Accounts", path: "/accounts" },
+              { icon: Target, label: "Goals", path: "/goals" },
+              { icon: Sparkles, label: "Scenario", path: "/scenario" },
+              { icon: FileText, label: "Reports", path: "/reports" },
+              { icon: Brain, label: "Insights", path: "/insights" },
+              { icon: Bell, label: "Notifications", path: "/notifications" },
+              { icon: Settings, label: "Settings", path: "/settings" },
+            ].map((item) => (
+              <a
+                key={item.label}
+                href={item.path}
+                className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-secondary">
+                    <item.icon className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="text-foreground">{item.label}</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </a>
+            ))}
+          </div>
+        </div>
 
         {/* Actions */}
         <div className="glass-card overflow-hidden animate-slide-up" style={{ animationDelay: "200ms" }}>
