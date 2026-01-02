@@ -5,11 +5,13 @@ import {
   Target,
   TrendingUp,
   User,
+  Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: Landmark, label: "Accounts", path: "/accounts" },
   { icon: Wallet, label: "Expenses", path: "/expenses" },
   { icon: TrendingUp, label: "Income", path: "/income" },
   { icon: Target, label: "Goals", path: "/goals" },
