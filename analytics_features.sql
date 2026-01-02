@@ -1,6 +1,6 @@
 -- =====================================================
 -- FUTORAPAY — ANALYTICS & SCALABILITY FEATURES
--- Run this in Supabase SQL Editor AFTER fixing column names
+-- SECURE VERSION with proper RLS handling
 -- =====================================================
 
 -- Create the update timestamp function if it doesn't exist
@@ -13,12 +13,19 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Drop existing views if they exist
-DROP VIEW IF EXISTS view_analytics_monthly_summary;
-DROP VIEW IF EXISTS view_analytics_category_summary;
+DROP VIEW IF EXISTS view_analytics_monthly_summary CASCADE;
+DROP VIEW IF EXISTS view_analytics_category_summary CASCADE;
 
--- 1. Analytics Views: Monthly Summary
--- Aggregates income, expense, and savings per month directly in the database.
-CREATE OR REPLACE VIEW view_analytics_monthly_summary AS
+-- =====================================================
+-- ANALYTICS VIEWS (SECURITY INVOKER - respects RLS)
+-- These views will only show data the calling user has access to
+-- =====================================================
+
+-- 1. Monthly Summary View
+-- Aggregates income, expense, and savings per month
+-- SECURITY INVOKER means it runs with the permissions of the calling user
+CREATE VIEW view_analytics_monthly_summary 
+WITH (security_invoker = true) AS
 SELECT 
   user_id,
   DATE_TRUNC('month', date)::DATE as month_start,
@@ -27,11 +34,13 @@ SELECT
   SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) as net_savings,
   COUNT(*) as transaction_count
 FROM transactions
+WHERE user_id = auth.uid()  -- Explicit user filter
 GROUP BY user_id, DATE_TRUNC('month', date);
 
-
--- 2. Analytics Views: Category Spending Breakdown
-CREATE OR REPLACE VIEW view_analytics_category_summary AS
+-- 2. Category Summary View
+-- Aggregates spending by category
+CREATE VIEW view_analytics_category_summary
+WITH (security_invoker = true) AS
 SELECT 
   user_id,
   category as category_name,
@@ -39,18 +48,21 @@ SELECT
   SUM(amount) as total_amount,
   COUNT(id) as transaction_count
 FROM transactions
-WHERE type = 'expense'
+WHERE type = 'expense' AND user_id = auth.uid()  -- Explicit user filter
 GROUP BY user_id, category, DATE_TRUNC('month', date);
-
 
 -- Drop existing function if it exists
 DROP FUNCTION IF EXISTS get_dashboard_stats(DATE);
 
--- 3. Function: Get Dashboard Stats (Optimized)
+-- =====================================================
+-- DASHBOARD STATS FUNCTION
+-- Returns all KPIs in a single JSON response
+-- =====================================================
+
 CREATE OR REPLACE FUNCTION get_dashboard_stats(p_month DATE DEFAULT DATE_TRUNC('month', CURRENT_DATE))
 RETURNS JSONB
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY DEFINER  -- Runs with elevated privileges but filters by auth.uid()
 SET search_path = public
 AS $$
 DECLARE
@@ -62,6 +74,11 @@ DECLARE
   v_total_balance NUMERIC;
   v_result JSONB;
 BEGIN
+  -- Security check
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'User not authenticated';
+  END IF;
+
   -- Get current month totals
   SELECT 
     COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0),
@@ -102,10 +119,21 @@ BEGIN
 END;
 $$;
 
+-- =====================================================
+-- VERIFICATION
+-- =====================================================
+
+-- Grant permissions
+GRANT SELECT ON view_analytics_monthly_summary TO authenticated;
+GRANT SELECT ON view_analytics_category_summary TO authenticated;
+GRANT EXECUTE ON FUNCTION get_dashboard_stats(DATE) TO authenticated;
+
 -- Success message
 DO $$
 BEGIN
-  RAISE NOTICE 'Analytics views and functions created successfully!';
-  RAISE NOTICE 'Views: view_analytics_monthly_summary, view_analytics_category_summary';
-  RAISE NOTICE 'Function: get_dashboard_stats()';
+  RAISE NOTICE '✅ Analytics views and functions created successfully!';
+  RAISE NOTICE 'Views created with SECURITY INVOKER - they respect RLS';
+  RAISE NOTICE '  - view_analytics_monthly_summary';
+  RAISE NOTICE '  - view_analytics_category_summary';
+  RAISE NOTICE 'Function: get_dashboard_stats(DATE)';
 END $$;
