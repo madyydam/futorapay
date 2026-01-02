@@ -11,73 +11,14 @@ import {
     Sparkles,
     ArrowRight,
     CheckCircle2,
-    XCircle
+    XCircle,
+    RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-const insights = [
-    {
-        id: 1,
-        type: "spending_anomaly",
-        severity: "warning",
-        title: "Unusual Shopping Spend",
-        description: "You spent ₹18,500 on Shopping this month, which is 145% higher than your average.",
-        impact: -5500,
-        actionable: true,
-        dismissed: false,
-        category: "Shopping",
-        date: "2026-01-02"
-    },
-    {
-        id: 2,
-        type: "savings_opportunity",
-        severity: "info",
-        title: "Potential Monthly Savings",
-        description: "By reducing dining out by 30%, you could save an additional ₹4,200/month.",
-        impact: 4200,
-        actionable: true,
-        dismissed: false,
-        category: "Food & Dining",
-        date: "2026-01-02"
-    },
-    {
-        id: 3,
-        type: "goal_recommendation",
-        severity: "info",
-        title: "On Track to Reach Goal",
-        description: "Your Emergency Fund goal is progressing well. You're ahead by 12% of your target timeline.",
-        impact: 15000,
-        actionable: false,
-        dismissed: false,
-        category: null,
-        date: "2026-01-01"
-    },
-    {
-        id: 4,
-        type: "cash_flow_warning",
-        severity: "critical",
-        title: "High Expense Month Ahead",
-        description: "Based on your recurring bills, next month will have ₹8,000 more expenses than usual.",
-        impact: -8000,
-        actionable: true,
-        dismissed: false,
-        category: "Bills",
-        date: "2025-12-30"
-    },
-    {
-        id: 5,
-        type: "category_trend",
-        severity: "info",
-        title: "Entertainment Spending Trend",
-        description: "Your entertainment expenses have decreased by 20% over the last 3 months. Great job!",
-        impact: 2500,
-        actionable: false,
-        dismissed: false,
-        category: "Entertainment",
-        date: "2025-12-28"
-    },
-];
+import { useTransactions } from "@/hooks/useTransactions";
+import { useSubscriptions } from "@/hooks/useSubscriptions";
+import { useMemo } from "react";
 
 const getSeverityConfig = (severity: string) => {
     switch (severity) {
@@ -109,6 +50,164 @@ const getSeverityConfig = (severity: string) => {
 };
 
 export default function Insights() {
+    const { transactions } = useTransactions();
+    const { subscriptions } = useSubscriptions();
+
+    const insights = useMemo(() => {
+        if (!transactions || transactions.length === 0) return [];
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const currentMonthTxns = transactions.filter(t => {
+            const d = new Date(t.date);
+            return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        });
+
+        const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+        const prevMonthTxns = transactions.filter(t => {
+            const d = new Date(t.date);
+            return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
+        });
+
+        const generatedInsights = [];
+
+        // Category spending analysis
+        const categoryMap = new Map<string, { current: number; prev: number }>();
+
+        currentMonthTxns.forEach(t => {
+            if (t.type === 'expense') {
+                const cat = t.category || 'Other';
+                const current = categoryMap.get(cat) || { current: 0, prev: 0 };
+                current.current += Number(t.amount);
+                categoryMap.set(cat, current);
+            }
+        });
+
+        prevMonthTxns.forEach(t => {
+            if (t.type === 'expense') {
+                const cat = t.category || 'Other';
+                const current = categoryMap.get(cat) || { current: 0, prev: 0 };
+                current.prev += Number(t.amount);
+                categoryMap.set(cat, current);
+            }
+        });
+
+        // Check for anomalies (>50% increase)
+        categoryMap.forEach((amounts, category) => {
+            if (amounts.prev > 0) {
+                const increase = ((amounts.current - amounts.prev) / amounts.prev) * 100;
+                if (increase > 50) {
+                    generatedInsights.push({
+                        id: generatedInsights.length + 1,
+                        type: "spending_anomaly",
+                        severity: increase > 100 ? "critical" : "warning",
+                        title: `Unusual ${category} Spend`,
+                        description: `You spent ₹${amounts.current.toLocaleString()} on ${category} this month, which is ${increase.toFixed(0)}% higher than last month.`,
+                        impact: -(amounts.current - amounts.prev),
+                        actionable: true,
+                        dismissed: false,
+                        category,
+                        date: now.toISOString().split('T')[0]
+                    });
+                }
+            }
+        });
+
+        // SUBSCRIPTION-BASED INSIGHTS
+        if (subscriptions && subscriptions.length > 0) {
+            const activeSubscriptions = subscriptions.filter(s => s.is_active);
+            const totalSubscriptionCost = activeSubscriptions
+                .filter(s => s.billing_cycle === 'monthly')
+                .reduce((sum, s) => sum + Number(s.amount), 0);
+
+            // Subscription cost insight
+            if (totalSubscriptionCost > 0) {
+                const avgExpense = currentMonthTxns
+                    .filter(t => t.type === 'expense')
+                    .reduce((sum, t) => sum + Number(t.amount), 0) / (currentMonthTxns.length || 1);
+
+                if (totalSubscriptionCost > avgExpense * 0.3) {
+                    generatedInsights.push({
+                        id: generatedInsights.length + 1,
+                        type: "subscription_insight",
+                        severity: "warning",
+                        title: "High Subscription Spending",
+                        description: `Your subscriptions cost ₹${totalSubscriptionCost.toLocaleString()}/month. This is ${((totalSubscriptionCost / (avgExpense * currentMonthTxns.length)) * 100).toFixed(0)}% of your monthly expenses.`,
+                        impact: -totalSubscriptionCost,
+                        actionable: true,
+                        dismissed: false,
+                        category: "Subscriptions",
+                        date: now.toISOString().split('T')[0]
+                    });
+                }
+            }
+
+            // Upcoming subscription payments
+            const dueThisWeek = activeSubscriptions.filter(s => {
+                const daysUntil = Math.ceil((new Date(s.next_billing_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                return daysUntil >= 0 && daysUntil <= 7;
+            });
+
+            if (dueThisWeek.length > 0) {
+                const totalDue = dueThisWeek.reduce((sum, s) => sum + Number(s.amount), 0);
+                generatedInsights.push({
+                    id: generatedInsights.length + 1,
+                    type: "cash_flow_warning",
+                    severity: totalDue > 5000 ? "critical" : "warning",
+                    title: "Subscriptions Due This Week",
+                    description: `You have ${dueThisWeek.length} subscriptions totaling ₹${totalDue.toLocaleString()} due in the next 7 days.`,
+                    impact: -totalDue,
+                    actionable: true,
+                    dismissed: false,
+                    category: "Bills",
+                    date: now.toISOString().split('T')[0]
+                });
+            }
+
+            // Inactive subscriptions warning
+            const inactiveSubscriptions = subscriptions.filter(s => !s.is_active);
+            if (inactiveSubscriptions.length > 0) {
+                generatedInsights.push({
+                    id: generatedInsights.length + 1,
+                    type: "goal_recommendation",
+                    severity: "info",
+                    title: "Review Inactive Subscriptions",
+                    description: `You have ${inactiveSubscriptions.length} inactive subscriptions. Consider deleting them if no longer needed.`,
+                    impact: 0,
+                    actionable: true,
+                    dismissed: false,
+                    category: null,
+                    date: now.toISOString().split('T')[0]
+                });
+            }
+        }
+
+        // Savings opportunity
+        const totalExpenseCurrentMonth = currentMonthTxns
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + Number(t.amount), 0);
+
+        if (totalExpenseCurrentMonth > 0) {
+            generatedInsights.push({
+                id: generatedInsights.length + 1,
+                type: "savings_opportunity",
+                severity: "info",
+                title: "Potential Monthly Savings",
+                description: `By reducing discretionary spending by 10%, you could save ₹${(totalExpenseCurrentMonth * 0.1).toLocaleString()}/month.`,
+                impact: totalExpenseCurrentMonth * 0.1,
+                actionable: true,
+                dismissed: false,
+                category: null,
+                date: now.toISOString().split('T')[0]
+            });
+        }
+
+        return generatedInsights;
+    }, [transactions, subscriptions]);
+
     const handleDismiss = (id: number) => {
         toast.success("Insight dismissed");
     };
@@ -116,6 +215,16 @@ export default function Insights() {
     const handleAction = (insight: typeof insights[0]) => {
         toast.info(`Taking action on: ${insight.title}`);
     };
+
+    if (!transactions && !subscriptions) {
+        return (
+            <DashboardLayout>
+                <div className="p-4 lg:p-8 flex items-center justify-center min-h-screen">
+                    <div className="text-muted-foreground">Loading insights...</div>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>
@@ -128,7 +237,7 @@ export default function Insights() {
                             <h1 className="text-2xl lg:text-3xl font-bold text-foreground">AI Insights</h1>
                         </div>
                         <p className="text-muted-foreground">
-                            Smart recommendations powered by your spending patterns
+                            Smart recommendations powered by your spending patterns & subscriptions
                         </p>
                     </div>
                     <Badge variant="outline" className="gap-1 px-3 py-1">
@@ -144,7 +253,9 @@ export default function Insights() {
                             <CardTitle className="text-sm font-medium text-muted-foreground">Potential Savings</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-success">₹ 6,700</div>
+                            <div className="text-2xl font-bold text-success">
+                                ₹ {insights.filter(i => i.impact > 0).reduce((sum, i) => sum + i.impact, 0).toLocaleString()}
+                            </div>
                             <p className="text-xs text-muted-foreground mt-1">This month</p>
                         </CardContent>
                     </Card>
@@ -153,17 +264,22 @@ export default function Insights() {
                             <CardTitle className="text-sm font-medium text-muted-foreground">Anomalies Detected</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-warning">3</div>
+                            <div className="text-2xl font-bold text-warning">
+                                {insights.filter(i => i.severity === 'warning' || i.severity === 'critical').length}
+                            </div>
                             <p className="text-xs text-muted-foreground mt-1">Needs attention</p>
                         </CardContent>
                     </Card>
                     <Card className="glass-card">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Goals on Track</CardTitle>
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Data Sources</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-primary">5/6</div>
-                            <p className="text-xs text-muted-foreground mt-1">Great progress</p>
+                            <div className="text-2xl font-bold text-primary flex items-center gap-2">
+                                <RefreshCw className="w-5 h-5" />
+                                {(subscriptions?.length || 0) + (transactions?.length || 0)}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">Transactions + Subscriptions</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -269,7 +385,7 @@ export default function Insights() {
                                 No Insights Yet
                             </h3>
                             <p className="text-sm text-muted-foreground max-w-sm">
-                                Keep tracking your transactions. Our AI will analyze your spending patterns and provide personalized insights.
+                                Keep tracking your transactions and subscriptions. Our AI will analyze your spending patterns and provide personalized insights.
                             </p>
                         </CardContent>
                     </Card>
