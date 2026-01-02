@@ -25,6 +25,14 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
     FileText,
     Download,
     FileSpreadsheet,
@@ -43,6 +51,8 @@ import {
     FileCheck,
     AlertCircle,
     Flame,
+    Eye,
+    Table as TableIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -139,6 +149,10 @@ export default function Reports() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [showGenerateDialog, setShowGenerateDialog] = useState(false);
 
+    // Preview State
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewReport, setPreviewReport] = useState<typeof generatedReports[0] | null>(null);
+
     const handleGenerateReport = async () => {
         if (!selectedReportType) {
             toast({
@@ -169,6 +183,11 @@ export default function Reports() {
             description: `Preparing ${reportName} (${format.toUpperCase()})...`,
         });
         // In a real app, this would trigger a file download from the generated URL
+    };
+
+    const handlePreview = (report: typeof generatedReports[0]) => {
+        setPreviewReport(report);
+        setShowPreview(true);
     };
 
     const getReportIcon = (typeId: string) => {
@@ -409,28 +428,44 @@ export default function Reports() {
                                                     variant="outline"
                                                     size="sm"
                                                     className="gap-2"
-                                                    onClick={() => handleDownload('pdf', report.name)}
+                                                    onClick={() => handlePreview(report)}
                                                 >
                                                     <FileText className="w-4 h-4" />
-                                                    PDF
+                                                    View PDF
                                                 </Button>
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
                                                     className="gap-2"
-                                                    onClick={() => handleDownload('excel', report.name)}
+                                                    onClick={() => handlePreview(report)}
                                                 >
                                                     <FileSpreadsheet className="w-4 h-4" />
-                                                    Excel
+                                                    View Excel
                                                 </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8"
-                                                    onClick={() => handleDownload('zip', report.name)}
-                                                >
-                                                    <Download className="w-4 h-4" />
-                                                </Button>
+
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <Download className="w-4 h-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Download Format</DropdownMenuLabel>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem onClick={() => handleDownload('pdf', report.name)}>
+                                                            <FileText className="mr-2 h-4 w-4 text-red-500" />
+                                                            PDF
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleDownload('excel', report.name)}>
+                                                            <FileSpreadsheet className="mr-2 h-4 w-4 text-green-500" />
+                                                            Excel (.xlsx)
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleDownload('csv', report.name)}>
+                                                            <TableIcon className="mr-2 h-4 w-4 text-blue-500" />
+                                                            CSV
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </div>
                                         </div>
                                     );
@@ -472,6 +507,96 @@ export default function Reports() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Preview Dialog */}
+            <Dialog open={showPreview} onOpenChange={setShowPreview}>
+                <DialogContent className="sm:max-w-3xl glass-card-elevated max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Eye className="w-5 h-5 text-primary" />
+                            {previewReport?.name}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Previewing report details. This is an immutable snapshot from {previewReport?.generatedAt.toLocaleDateString()}.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-4 border rounded-lg bg-card/50">
+                        <div className="p-4 border-b flex justify-between items-center bg-muted/20">
+                            <div>
+                                <h4 className="font-bold text-lg">FutoraPay Report</h4>
+                                <p className="text-sm text-muted-foreground">Generated for: {previewReport?.period}</p>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-sm font-mono text-muted-foreground">ID: {previewReport?.id}-SNAP-LOCKED</div>
+                                <div className="text-xs text-success flex items-center justify-end gap-1">
+                                    <Lock className="w-3 h-3" /> Encrypted & Verified
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Sample Table Content based on report type - Simulation */}
+                        <div className="p-4">
+                            <table className="w-full text-sm text-left">
+                                <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
+                                    <tr>
+                                        <th className="px-4 py-3">Category / Item</th>
+                                        <th className="px-4 py-3 text-right">Amount</th>
+                                        <th className="px-4 py-3 text-right">% Change</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    <tr>
+                                        <td className="px-4 py-3 font-medium">Housing & Utilities</td>
+                                        <td className="px-4 py-3 text-right">₹45,000.00</td>
+                                        <td className="px-4 py-3 text-right text-red-500">+12%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-4 py-3 font-medium">Food & Dining</td>
+                                        <td className="px-4 py-3 text-right">₹12,450.00</td>
+                                        <td className="px-4 py-3 text-right text-green-500">-5%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-4 py-3 font-medium">Transportation</td>
+                                        <td className="px-4 py-3 text-right">₹8,200.00</td>
+                                        <td className="px-4 py-3 text-right text-gray-500">0%</td>
+                                    </tr>
+                                    <tr className="bg-muted/10 font-bold">
+                                        <td className="px-4 py-3">Total</td>
+                                        <td className="px-4 py-3 text-right">₹65,650.00</td>
+                                        <td className="px-4 py-3 text-right"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div className="mt-4 text-xs text-center text-muted-foreground italic">
+                                * This is a preview. Download the full report for detailed transaction logs.
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="flex-col sm:flex-row gap-2">
+                        <div className="flex-1 text-xs text-muted-foreground flex items-center gap-1">
+                            <Shield className="w-3 h-3" />
+                            Verified by FutoraPay Audit Engine
+                        </div>
+                        <Button
+                            className="w-full sm:w-auto"
+                            onClick={() => handleDownload('pdf', previewReport?.name || 'Report')}
+                        >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download PDF
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="w-full sm:w-auto"
+                            onClick={() => handleDownload('excel', previewReport?.name || 'Report')}
+                        >
+                            <FileSpreadsheet className="w-4 h-4 mr-2" />
+                            Download Excel
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </DashboardLayout>
     );
 }
