@@ -1,4 +1,3 @@
-
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,35 +16,71 @@ import {
     Pie,
     Cell
 } from "recharts";
-import { Download, FileDown, Printer, Filter } from "lucide-react";
+import { Download, Filter } from "lucide-react";
 import { toast } from "sonner";
-
-// Mock data simulating the 'view_analytics_monthly_summary'
-const monthlyData = [
-    { month: 'Jan', income: 45000, expense: 32000, savings: 13000 },
-    { month: 'Feb', income: 52000, expense: 34000, savings: 18000 },
-    { month: 'Mar', income: 48000, expense: 29000, savings: 19000 },
-    { month: 'Apr', income: 61000, expense: 42000, savings: 19000 },
-    { month: 'May', income: 55000, expense: 38000, savings: 17000 },
-    { month: 'Jun', income: 67000, expense: 45000, savings: 22000 },
-];
-
-const categoryData = [
-    { name: 'Food & Dining', value: 12000, color: '#FF8042' },
-    { name: 'Shopping', value: 8500, color: '#0088FE' },
-    { name: 'Transport', value: 4500, color: '#00C49F' },
-    { name: 'Bills', value: 15000, color: '#FFBB28' },
-    { name: 'Entertainment', value: 5000, color: '#8884d8' },
-];
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { useTransactions } from "@/hooks/useTransactions";
+import { useMemo } from "react";
 
 export default function Reports() {
+    const { monthlySummary, categorySummary, isLoading } = useAnalytics();
+    const { transactions } = useTransactions();
+
+    const monthlyData = useMemo(() => {
+        if (!monthlySummary) return [];
+        return monthlySummary.map(m => ({
+            month: new Date(m.month_start).toLocaleDateString('en-US', { month: 'short' }),
+            income: Number(m.total_income) || 0,
+            expense: Number(m.total_expense) || 0,
+            savings: Number(m.net_savings) || 0,
+        }));
+    }, [monthlySummary]);
+
+    const categoryData = useMemo(() => {
+        if (!categorySummary) return [];
+        const colors = ['#FF8042', '#0088FE', '#00C49F', '#FFBB28', '#8884d8', '#FF6B9D'];
+        return categorySummary.map((cat, idx) => ({
+            name: cat.category_name || 'Uncategorized',
+            value: Number(cat.total_amount) || 0,
+            color: colors[idx % colors.length]
+        }));
+    }, [categorySummary]);
+
+    const yearlyStats = useMemo(() => {
+        if (!transactions) return { income: 0, expense: 0, rate: 0 };
+        const currentYear = new Date().getFullYear();
+        const yearTransactions = transactions.filter(t =>
+            new Date(t.date).getFullYear() === currentYear
+        );
+        const income = yearTransactions
+            .filter(t => t.type === 'income')
+            .reduce((sum, t) => sum + Number(t.amount), 0);
+        const expense = yearTransactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + Number(t.amount), 0);
+        return {
+            income,
+            expense,
+            rate: income > 0 ? ((income - expense) / income * 100) : 0
+        };
+    }, [transactions]);
+
     const handleExport = (format: string) => {
         toast.success(`Exporting report as ${format}...`);
-        // Logic to generate PDF/CSV would go here
         setTimeout(() => {
             toast.success("Report downloaded successfully!");
         }, 1500);
     };
+
+    if (isLoading) {
+        return (
+            <DashboardLayout>
+                <div className="p-4 lg:p-8 flex items-center justify-center min-h-screen">
+                    <div className="text-muted-foreground">Loading analytics...</div>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>
@@ -77,8 +112,8 @@ export default function Reports() {
                             <CardTitle className="text-sm font-medium text-muted-foreground">Total Income (YTD)</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-success">₹ 3,28,000</div>
-                            <p className="text-xs text-muted-foreground mt-1">+12% from last year</p>
+                            <div className="text-2xl font-bold text-success">₹ {yearlyStats.income.toLocaleString('en-IN')}</div>
+                            <p className="text-xs text-muted-foreground mt-1">Year to date</p>
                         </CardContent>
                     </Card>
                     <Card className="glass-card">
@@ -86,8 +121,8 @@ export default function Reports() {
                             <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses (YTD)</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-destructive">₹ 2,20,000</div>
-                            <p className="text-xs text-muted-foreground mt-1">+5% from last year</p>
+                            <div className="text-2xl font-bold text-destructive">₹ {yearlyStats.expense.toLocaleString('en-IN')}</div>
+                            <p className="text-xs text-muted-foreground mt-1">Year to date</p>
                         </CardContent>
                     </Card>
                     <Card className="glass-card">
@@ -95,8 +130,10 @@ export default function Reports() {
                             <CardTitle className="text-sm font-medium text-muted-foreground">Net Savings Rate</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-primary">32.9%</div>
-                            <p className="text-xs text-muted-foreground mt-1">Target: 30%</p>
+                            <div className="text-2xl font-bold text-primary">{yearlyStats.rate.toFixed(1)}%</div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {yearlyStats.rate >= 30 ? 'Above' : 'Below'} target (30%)
+                            </p>
                         </CardContent>
                     </Card>
                 </div>
@@ -118,19 +155,25 @@ export default function Reports() {
                                     <CardDescription>Monthly comparison for the last 6 months</CardDescription>
                                 </CardHeader>
                                 <CardContent className="h-[300px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={monthlyData}>
-                                            <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                                            <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                                            <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value / 1000}k`} />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }}
-                                                itemStyle={{ color: 'hsl(var(--foreground))' }}
-                                            />
-                                            <Bar dataKey="income" name="Income" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
-                                            <Bar dataKey="expense" name="Expense" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                    {monthlyData.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={monthlyData}>
+                                                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                                                <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                                                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value / 1000}k`} />
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }}
+                                                    itemStyle={{ color: 'hsl(var(--foreground))' }}
+                                                />
+                                                <Bar dataKey="income" name="Income" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+                                                <Bar dataKey="expense" name="Expense" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                                            No data available
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
 
@@ -140,35 +183,43 @@ export default function Reports() {
                                     <CardDescription>Where your money went this month</CardDescription>
                                 </CardHeader>
                                 <CardContent className="h-[300px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={categoryData}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={80}
-                                                paddingAngle={5}
-                                                dataKey="value"
-                                            >
-                                                {categoryData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }}
-                                                itemStyle={{ color: 'hsl(var(--foreground))' }}
-                                            />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                    <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs text-muted-foreground">
-                                        {categoryData.map((entry, index) => (
-                                            <div key={index} className="flex items-center gap-1">
-                                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                                                <span>{entry.name}</span>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {categoryData.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={categoryData}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={60}
+                                                    outerRadius={80}
+                                                    paddingAngle={5}
+                                                    dataKey="value"
+                                                >
+                                                    {categoryData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }}
+                                                    itemStyle={{ color: 'hsl(var(--foreground))' }}
+                                                />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                                            No category data available
+                                        </div>
+                                    )}
+                                    {categoryData.length > 0 && (
+                                        <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs text-muted-foreground">
+                                            {categoryData.map((entry, index) => (
+                                                <div key={index} className="flex items-center gap-1">
+                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                                                    <span>{entry.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </div>
@@ -179,28 +230,43 @@ export default function Reports() {
                                 <CardDescription>Your monthly savings growth over time</CardDescription>
                             </CardHeader>
                             <CardContent className="h-[300px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={monthlyData}>
-                                        <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                                        <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                                        <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value / 1000}k`} />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }}
-                                            itemStyle={{ color: 'hsl(var(--foreground))' }}
-                                        />
-                                        <Line type="monotone" dataKey="savings" stroke="hsl(var(--primary))" strokeWidth={3} activeDot={{ r: 8 }} />
-                                    </LineChart>
-                                </ResponsiveContainer>
+                                {monthlyData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={monthlyData}>
+                                            <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                                            <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                                            <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value / 1000}k`} />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }}
+                                                itemStyle={{ color: 'hsl(var(--foreground))' }}
+                                            />
+                                            <Line type="monotone" dataKey="savings" stroke="hsl(var(--primary))" strokeWidth={3} activeDot={{ r: 8 }} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                                        No savings data available
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </TabsContent>
 
                     <TabsContent value="income">
                         <div className="flex items-center justify-center p-12 text-muted-foreground border border-dashed rounded-xl">
-                            Detailed Income Analysis coming soon with Advanced Mode
+                            Detailed Income Analysis coming soon
                         </div>
                     </TabsContent>
-                    {/* Other tabs placeholders */}
+                    <TabsContent value="expense">
+                        <div className="flex items-center justify-center p-12 text-muted-foreground border border-dashed rounded-xl">
+                            Detailed Expense Analysis coming soon
+                        </div>
+                    </TabsContent>
+                    <TabsContent value="networth">
+                        <div className="flex items-center justify-center p-12 text-muted-foreground border border-dashed rounded-xl">
+                            Net Worth Tracking coming soon
+                        </div>
+                    </TabsContent>
                 </Tabs>
             </div>
         </DashboardLayout>

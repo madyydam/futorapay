@@ -230,6 +230,7 @@ export default function Profile() {
             {[
               { icon: Landmark, label: "Accounts", path: "/accounts" },
               { icon: Target, label: "Goals", path: "/goals" },
+              { icon: RefreshCw, label: "Subscriptions", path: "/subscriptions" },
               { icon: Sparkles, label: "Scenario", path: "/scenario" },
               { icon: FileText, label: "Reports", path: "/reports" },
               { icon: Brain, label: "Insights", path: "/insights" },
