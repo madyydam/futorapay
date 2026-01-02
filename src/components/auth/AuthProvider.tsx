@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
@@ -9,7 +9,9 @@ interface AuthContextType {
     session: Session | null;
     user: User | null;
     loading: boolean;
+    isGuest: boolean;
     signOut: () => Promise<void>;
+    skipAuth: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,21 +20,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isGuest, setIsGuest] = useState(() => {
+        return localStorage.getItem("futora_guest_mode") === "true";
+    });
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
         let isMounted = true;
 
-        // Fallback timeout to ensure we don't stay in loading state forever
+        // Fallback timeout
         const timeoutId = setTimeout(() => {
             if (isMounted) {
-                console.warn("Auth initialization timed out. Proceeding to fallback state.");
                 setLoading(false);
             }
         }, 5000);
 
-        // Check active sessions and sets the user
         supabase.auth.getSession()
             .then(({ data: { session } }) => {
                 if (isMounted) {
@@ -40,25 +43,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setUser(session?.user ?? null);
                     setLoading(false);
                     clearTimeout(timeoutId);
-                    handleRedirect(session);
+                    handleRedirect(session, isGuest);
                 }
             })
             .catch((error) => {
-                console.error("Error getting session:", error);
                 if (isMounted) {
                     setLoading(false);
                     clearTimeout(timeoutId);
                 }
             });
 
-        // Listen for changes on auth state
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event, session) => {
                 if (isMounted) {
                     setSession(session);
                     setUser(session?.user ?? null);
                     setLoading(false);
-                    handleRedirect(session);
+                    // If user logs in, disable guest mode
+                    if (session) {
+                        setIsGuest(false);
+                        localStorage.removeItem("futora_guest_mode");
+                    }
+                    handleRedirect(session, isGuest);
                 }
             }
         );
@@ -70,29 +76,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
     }, []);
 
-    const handleRedirect = (session: Session | null) => {
+    const handleRedirect = (session: Session | null, guestMode: boolean) => {
         const isAuthPage = location.pathname === "/auth";
+        const isAuthenticated = !!session || guestMode;
 
-        if (!session && !isAuthPage) {
+        if (!isAuthenticated && !isAuthPage) {
             navigate("/auth");
-        } else if (session && isAuthPage) {
+        } else if (isAuthenticated && isAuthPage) {
             navigate("/");
         }
     };
 
-    const signOut = async () => {
+    const skipAuth = useCallback(() => {
+        setIsGuest(true);
+        localStorage.setItem("futora_guest_mode", "true");
+        toast.info("Welcome to Guest Mode! Using mock data.");
+        navigate("/");
+    }, [navigate]);
+
+    const signOut = useCallback(async () => {
         try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
+            if (isGuest) {
+                setIsGuest(false);
+                localStorage.removeItem("futora_guest_mode");
+            } else {
+                await supabase.auth.signOut();
+            }
             toast.success("Successfully signed out");
             navigate("/auth");
         } catch (error: any) {
             toast.error(error.message || "Error signing out");
         }
-    };
+    }, [isGuest, navigate]);
+
+    const value = useMemo(() => ({
+        session,
+        user,
+        loading,
+        isGuest,
+        signOut,
+        skipAuth
+    }), [session, user, loading, isGuest, signOut, skipAuth]);
 
     return (
-        <AuthContext.Provider value={{ session, user, loading, signOut }}>
+        <AuthContext.Provider value={value}>
             {loading ? (
                 <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
                     <div className="space-y-6 max-w-md animate-fade-in">

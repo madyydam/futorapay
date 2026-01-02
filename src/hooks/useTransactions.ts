@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useMemo } from "react";
 
+import { MOCK_TRANSACTIONS, GUEST_USER } from "@/lib/mock-data";
+
 export interface Transaction {
     id: string;
     user_id: string;
@@ -19,11 +21,13 @@ export interface Transaction {
 
 export function useTransactions() {
     const queryClient = useQueryClient();
-    const { user } = useAuth();
+    const { user, isGuest } = useAuth();
+    const effectiveUser = isGuest ? GUEST_USER : user;
 
     const { data: transactions, isLoading, error } = useQuery({
-        queryKey: ["transactions", user?.id],
+        queryKey: ["transactions", effectiveUser?.id],
         queryFn: async () => {
+            if (isGuest) return MOCK_TRANSACTIONS;
             if (!user) return [];
             const { data, error } = await supabase
                 .from("transactions")
@@ -34,11 +38,15 @@ export function useTransactions() {
             if (error) throw error;
             return data as Transaction[];
         },
-        enabled: !!user,
+        enabled: !!effectiveUser,
     });
 
     const addTransaction = useMutation({
         mutationFn: async (newTransaction: Omit<Transaction, "id" | "user_id" | "created_at">) => {
+            if (isGuest) {
+                toast.error("Cannot add transactions in demo mode");
+                return null;
+            }
             if (!user) throw new Error("User not authenticated");
 
             const { data, error } = await supabase
@@ -61,6 +69,10 @@ export function useTransactions() {
 
     const updateTransaction = useMutation({
         mutationFn: async ({ id, ...updates }: Partial<Transaction> & { id: string }) => {
+            if (isGuest) {
+                toast.error("Cannot update transactions in demo mode");
+                return null;
+            }
             const { data, error } = await supabase
                 .from("transactions")
                 .update(updates)
@@ -83,6 +95,10 @@ export function useTransactions() {
 
     const deleteTransaction = useMutation({
         mutationFn: async (id: string) => {
+            if (isGuest) {
+                toast.error("Cannot delete transactions in demo mode");
+                return null;
+            }
             const { error } = await supabase
                 .from("transactions")
                 .delete()

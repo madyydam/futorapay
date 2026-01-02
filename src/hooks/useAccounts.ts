@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useMemo } from "react";
 
+import { MOCK_ACCOUNTS, GUEST_USER } from "@/lib/mock-data";
+
 export type AccountType =
     | "cash"
     | "bank_checking"
@@ -50,11 +52,13 @@ export type NewAccount = Pick<Account, "name" | "type" | "current_balance" | "cu
 
 export function useAccounts() {
     const queryClient = useQueryClient();
-    const { user } = useAuth();
+    const { user, isGuest } = useAuth();
+    const effectiveUser = isGuest ? GUEST_USER : user;
 
     const { data: accounts, isLoading, error } = useQuery({
-        queryKey: ["accounts", user?.id],
+        queryKey: ["accounts", effectiveUser?.id],
         queryFn: async () => {
+            if (isGuest) return MOCK_ACCOUNTS;
             if (!user) return [];
             const { data, error } = await supabase
                 .from("accounts")
@@ -65,11 +69,15 @@ export function useAccounts() {
             if (error) throw error;
             return data as Account[];
         },
-        enabled: !!user,
+        enabled: !!effectiveUser,
     });
 
     const createAccount = useMutation({
         mutationFn: async (newAccount: NewAccount) => {
+            if (isGuest) {
+                toast.error("Demo mode: Cannot create accounts");
+                return null;
+            }
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("User not found");
 
@@ -112,6 +120,10 @@ export function useAccounts() {
 
     const deleteAccount = useMutation({
         mutationFn: async (id: string) => {
+            if (isGuest) {
+                toast.error("Demo mode: Cannot delete accounts");
+                return null;
+            }
             const { error } = await supabase.from("accounts").delete().eq("id", id);
             if (error) throw error;
         },

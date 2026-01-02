@@ -25,7 +25,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
+import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
+import { GUEST_USER } from "@/lib/mock-data";
 
 export default function Profile() {
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -36,7 +37,8 @@ export default function Profile() {
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
-  const { user, signOut } = useAuth();
+  const { user: authUser, signOut, isGuest } = useAuth();
+  const user = (isGuest ? GUEST_USER : authUser) as any;
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -59,19 +61,37 @@ export default function Profile() {
           icon: User,
           label: "Personal Information",
           value: user?.user_metadata?.full_name || "Not set",
-          onClick: () => setEditProfileOpen(true)
+          onClick: () => {
+            if (isGuest) {
+              toast.error("Profile editing is disabled in demo mode.");
+              return;
+            }
+            setEditProfileOpen(true);
+          }
         },
         {
           icon: Mail,
           label: "Email",
           value: user?.email || "Not set",
-          onClick: () => toast.info("To change your email, please contact support.")
+          onClick: () => {
+            if (isGuest) {
+              toast.error("Email editing is disabled in demo mode.");
+              return;
+            }
+            toast.info("To change your email, please contact support.");
+          }
         },
         {
           icon: Phone,
           label: "Phone",
           value: user?.user_metadata?.phone || user?.phone || "Not set",
-          onClick: () => setEditProfileOpen(true)
+          onClick: () => {
+            if (isGuest) {
+              toast.error("Phone editing is disabled in demo mode.");
+              return;
+            }
+            setEditProfileOpen(true);
+          }
         },
         {
           icon: Globe,

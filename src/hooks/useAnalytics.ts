@@ -3,6 +3,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useMemo } from "react";
 
+import { MOCK_MONTHLY_SUMMARY, MOCK_CATEGORY_SUMMARY, GUEST_USER } from "@/lib/mock-data";
+
 interface MonthlySummary {
     month_start: string;
     total_income: number;
@@ -19,11 +21,13 @@ interface CategorySummary {
 }
 
 export function useAnalytics() {
-    const { user } = useAuth();
+    const { user, isGuest } = useAuth();
+    const effectiveUser = isGuest ? GUEST_USER : user;
 
     const { data: monthlySummary, isLoading: monthlyLoading } = useQuery({
-        queryKey: ["analytics", "monthly", user?.id],
+        queryKey: ["analytics", "monthly", effectiveUser?.id],
         queryFn: async () => {
+            if (isGuest) return MOCK_MONTHLY_SUMMARY as MonthlySummary[];
             if (!user) return [];
             const { data, error } = await supabase
                 .from("view_analytics_monthly_summary")
@@ -35,12 +39,13 @@ export function useAnalytics() {
             if (error) throw error;
             return (data as MonthlySummary[]) || [];
         },
-        enabled: !!user,
+        enabled: !!effectiveUser,
     });
 
     const { data: categorySummary, isLoading: categoryLoading } = useQuery({
-        queryKey: ["analytics", "category", user?.id],
+        queryKey: ["analytics", "category", effectiveUser?.id],
         queryFn: async () => {
+            if (isGuest) return MOCK_CATEGORY_SUMMARY as CategorySummary[];
             if (!user) return [];
             const currentMonth = new Date().toISOString().slice(0, 7) + "-01";
             const { data, error } = await supabase
@@ -52,7 +57,7 @@ export function useAnalytics() {
             if (error) throw error;
             return (data as CategorySummary[]) || [];
         },
-        enabled: !!user,
+        enabled: !!effectiveUser,
     });
 
     return useMemo(() => ({

@@ -14,7 +14,8 @@ import {
     CardTitle
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wallet, LogIn, UserPlus, Github, CheckCircle2, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Wallet, LogIn, UserPlus, Github, CheckCircle2, ArrowRight, Eye, EyeOff, Play } from "lucide-react";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 
 
@@ -24,6 +25,7 @@ export default function Auth() {
     const [fullName, setFullName] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const { skipAuth } = useAuth();
     const navigate = useNavigate();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -317,6 +319,23 @@ export default function Auth() {
                             </Card>
                         </TabsContent>
                     </Tabs>
+
+                    <div className="mt-8 pt-6 border-t border-border/50">
+                        <Button
+                            variant="outline"
+                            onClick={skipAuth}
+                            className="w-full flex items-center justify-center gap-2 group hover:border-primary/50 py-6"
+                        >
+                            <div className="p-1 px-2 rounded-md bg-secondary text-xs group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                                GUEST MODE
+                            </div>
+                            <span>Skip and View Demo</span>
+                            <Play className="w-3 h-3 text-muted-foreground group-hover:text-primary fill-current" />
+                        </Button>
+                        <p className="text-center text-xs text-muted-foreground mt-3 italic">
+                            Experience the UI with mock data. No sign-up required.
+                        </p>
+                    </div>
                 </div>
             </main>
 

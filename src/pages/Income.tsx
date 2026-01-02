@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,52 +39,67 @@ const incomeSourceIcons: Record<string, { icon: any; color: string; bg: string }
 export default function Income() {
   const { transactions, isLoading, deleteTransaction } = useTransactions();
 
-  // Filter for income only
-  const incomeTransactions = transactions?.filter(t => t.type === 'income') || [];
+  // Memoize income transactions
+  const incomeTransactions = useMemo(() =>
+    transactions?.filter(t => t.type === 'income') || [],
+    [transactions]
+  );
 
-  // Calculate total monthly income (for current month)
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+  // Calculate total monthly income and YTD income
+  const totals = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
-  const currentMonthIncome = incomeTransactions
-    .filter(t => {
-      const d = new Date(t.date);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    })
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+    const monthly = incomeTransactions
+      .filter(t => {
+        const d = new Date(t.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      })
+      .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  // Calculate YTD Income
-  const ytdIncome = incomeTransactions
-    .filter(t => new Date(t.date).getFullYear() === currentYear)
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+    const ytd = incomeTransactions
+      .filter(t => new Date(t.date).getFullYear() === currentYear)
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    return { monthly, ytd, currentYear };
+  }, [incomeTransactions]);
+
+  const { monthly: currentMonthIncome, ytd: ytdIncome, currentYear } = totals;
 
   // Prepare Chart Data (Last 6 months)
-  const chartData = Array.from({ length: 6 }).map((_, i) => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - (5 - i));
-    const monthName = d.toLocaleString('default', { month: 'short' });
-    const monthIndex = d.getMonth();
-    const year = d.getFullYear();
+  const chartData = useMemo(() =>
+    Array.from({ length: 6 }).map((_, i) => {
+      const d = new Date();
+      d.setMonth(d.getMonth() - (5 - i));
+      const monthName = d.toLocaleString('default', { month: 'short' });
+      const monthIndex = d.getMonth();
+      const year = d.getFullYear();
 
-    const monthTransactions = incomeTransactions.filter(t => {
-      const td = new Date(t.date);
-      return td.getMonth() === monthIndex && td.getFullYear() === year;
-    });
+      const monthTransactions = incomeTransactions.filter(t => {
+        const td = new Date(t.date);
+        return td.getMonth() === monthIndex && td.getFullYear() === year;
+      });
 
-    return {
-      month: monthName,
-      salary: monthTransactions.filter(t => t.category.toLowerCase() === 'salary').reduce((sum, t) => sum + Number(t.amount), 0),
-      freelance: monthTransactions.filter(t => t.category.toLowerCase() === 'freelance').reduce((sum, t) => sum + Number(t.amount), 0),
-      other: monthTransactions.filter(t => !['salary', 'freelance'].includes(t.category.toLowerCase())).reduce((sum, t) => sum + Number(t.amount), 0),
-    };
-  });
+      return {
+        month: monthName,
+        salary: monthTransactions.filter(t => t.category.toLowerCase() === 'salary').reduce((sum, t) => sum + Number(t.amount), 0),
+        freelance: monthTransactions.filter(t => t.category.toLowerCase() === 'freelance').reduce((sum, t) => sum + Number(t.amount), 0),
+        other: monthTransactions.filter(t => !['salary', 'freelance'].includes(t.category.toLowerCase())).reduce((sum, t) => sum + Number(t.amount), 0),
+      };
+    }),
+    [incomeTransactions]
+  );
 
   // Calculate Income Sources Breakdown
-  const sourcesBreakdown = incomeTransactions.reduce((acc, t) => {
-    const key = t.category.toLowerCase();
-    acc[key] = (acc[key] || 0) + Number(t.amount);
-    return acc;
-  }, {} as Record<string, number>);
+  const sourcesBreakdown = useMemo(() =>
+    incomeTransactions.reduce((acc, t) => {
+      const key = t.category.toLowerCase();
+      acc[key] = (acc[key] || 0) + Number(t.amount);
+      return acc;
+    }, {} as Record<string, number>),
+    [incomeTransactions]
+  );
 
   return (
     <DashboardLayout>

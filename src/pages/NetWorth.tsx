@@ -70,11 +70,28 @@ const accountTypeLabels: Record<string, string> = {
     other_liability: "Other Liability",
 };
 
+const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0,
+    }).format(amount);
+};
+
+const getChangeIndicator = (change: number) => {
+    if (change > 0) {
+        return { icon: ArrowUpRight, color: "text-success", bg: "bg-success/10" };
+    } else if (change < 0) {
+        return { icon: ArrowDownRight, color: "text-destructive", bg: "bg-destructive/10" };
+    }
+    return { icon: RefreshCw, color: "text-muted-foreground", bg: "bg-secondary" };
+};
+
 export default function NetWorth() {
     const { accounts, isLoading } = useAccounts();
     const [timeframe, setTimeframe] = useState("1M");
 
-    // Calculate totals
+    // Calculate totals and breakdowns
     const calculations = useMemo(() => {
         if (!accounts) return { assets: 0, liabilities: 0, netWorth: 0, assetBreakdown: [], liabilityBreakdown: [] };
 
@@ -111,32 +128,17 @@ export default function NetWorth() {
         };
     }, [accounts]);
 
-    // Simulated historical data for visualization
+    // Simulated historical data - stabilized for performance and smoothness
     const netWorthHistory = useMemo(() => {
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
         const baseValue = calculations.netWorth || 0;
+        // Use a deterministic "pseudo-random" multiplier based on index for stability
+        const multipliers = [0.85, 0.88, 0.92, 0.95, 0.98, 1.0];
         return months.map((month, index) => ({
             month,
-            value: Math.max(0, baseValue * (0.7 + (index * 0.05) + Math.random() * 0.1)),
+            value: Math.max(0, baseValue * (multipliers[index] || 1)),
         }));
     }, [calculations.netWorth]);
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            maximumFractionDigits: 0,
-        }).format(amount);
-    };
-
-    const getChangeIndicator = (change: number) => {
-        if (change > 0) {
-            return { icon: ArrowUpRight, color: "text-success", bg: "bg-success/10" };
-        } else if (change < 0) {
-            return { icon: ArrowDownRight, color: "text-destructive", bg: "bg-destructive/10" };
-        }
-        return { icon: RefreshCw, color: "text-muted-foreground", bg: "bg-secondary" };
-    };
 
     return (
         <DashboardLayout>

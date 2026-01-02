@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useMemo } from "react";
 
+import { MOCK_SUBSCRIPTIONS, GUEST_USER } from "@/lib/mock-data";
+
 export interface Subscription {
     id: string;
     user_id: string;
@@ -28,11 +30,13 @@ export interface Subscription {
 
 export function useSubscriptions() {
     const queryClient = useQueryClient();
-    const { user } = useAuth();
+    const { user, isGuest } = useAuth();
+    const effectiveUser = isGuest ? GUEST_USER : user;
 
     const { data: subscriptions, isLoading, error } = useQuery({
-        queryKey: ["subscriptions", user?.id],
+        queryKey: ["subscriptions", effectiveUser?.id],
         queryFn: async () => {
+            if (isGuest) return MOCK_SUBSCRIPTIONS;
             if (!user) return [];
             const { data, error } = await supabase
                 .from("subscriptions")
@@ -43,11 +47,15 @@ export function useSubscriptions() {
             if (error) throw error;
             return data as Subscription[];
         },
-        enabled: !!user,
+        enabled: !!effectiveUser,
     });
 
     const addSubscription = useMutation({
         mutationFn: async (newSub: Omit<Subscription, "id" | "user_id" | "created_at" | "updated_at">) => {
+            if (isGuest) {
+                toast.error("Demo mode: Cannot add subscriptions");
+                return null;
+            }
             if (!user) throw new Error("User not authenticated");
 
             const { data, error } = await supabase
@@ -70,6 +78,10 @@ export function useSubscriptions() {
 
     const updateSubscription = useMutation({
         mutationFn: async ({ id, ...updates }: Partial<Subscription> & { id: string }) => {
+            if (isGuest) {
+                toast.error("Demo mode: Cannot update subscriptions");
+                return null;
+            }
             const { data, error } = await supabase
                 .from("subscriptions")
                 .update(updates)
@@ -92,6 +104,10 @@ export function useSubscriptions() {
 
     const deleteSubscription = useMutation({
         mutationFn: async (id: string) => {
+            if (isGuest) {
+                toast.error("Demo mode: Cannot delete subscriptions");
+                return null;
+            }
             const { error } = await supabase
                 .from("subscriptions")
                 .delete()
@@ -110,6 +126,10 @@ export function useSubscriptions() {
 
     const toggleSubscription = useMutation({
         mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+            if (isGuest) {
+                toast.error("Demo mode: Cannot toggle subscriptions");
+                return null;
+            }
             const { error } = await supabase
                 .from("subscriptions")
                 .update({ is_active })

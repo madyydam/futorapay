@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGoals } from "@/hooks/useGoals";
-import { AddGoalDialog } from "@/components/dashboard/AddGoalDialog";
+import { AddGoalDialog } from "@/components/goals/AddGoalDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +35,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 const ICON_MAP: Record<string, any> = {
   Target, Car, Home, Plane, Smartphone, GraduationCap, Gem
@@ -58,9 +58,14 @@ export default function Goals() {
     }
   };
 
-  const totalSavings = goals?.reduce((acc, goal) => acc + Number(goal.current_amount), 0) || 0;
-  const totalTarget = goals?.reduce((acc, goal) => acc + Number(goal.target_amount), 0) || 0;
-  const overallProgress = totalTarget > 0 ? (totalSavings / totalTarget) * 100 : 0;
+  const calculations = useMemo(() => {
+    const totalSavings = goals?.reduce((acc, goal) => acc + Number(goal.current_amount), 0) || 0;
+    const totalTarget = goals?.reduce((acc, goal) => acc + Number(goal.target_amount), 0) || 0;
+    const overallProgress = totalTarget > 0 ? (totalSavings / totalTarget) * 100 : 0;
+    return { totalSavings, totalTarget, overallProgress };
+  }, [goals]);
+
+  const { totalSavings, totalTarget, overallProgress } = calculations;
 
   return (
     <DashboardLayout>

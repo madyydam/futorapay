@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,17 +36,30 @@ export default function Subscriptions() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingSubscription, setEditingSubscription] = useState<any>(null);
 
-    const activeSubscriptions = subscriptions.filter(s => s.is_active);
-    const totalMonthly = activeSubscriptions
-        .filter(s => s.billing_cycle === 'monthly')
-        .reduce((sum, sub) => sum + Number(sub.amount), 0);
+    const calculations = useMemo(() => {
+        const activeSubscriptions = subscriptions.filter(s => s.is_active);
 
-    const upcomingBills = activeSubscriptions
-        .sort((a, b) => new Date(a.next_billing_date).getTime() - new Date(b.next_billing_date).getTime())
-        .slice(0, 5);
+        const totalMonthly = activeSubscriptions
+            .filter(s => s.billing_cycle === 'monthly')
+            .reduce((sum, sub) => sum + Number(sub.amount), 0);
 
-    const dueThisWeek = activeSubscriptions.filter(s => getDaysUntil(s.next_billing_date) <= 7);
-    const dueThisWeekTotal = dueThisWeek.reduce((sum, s) => sum + Number(s.amount), 0);
+        const upcomingBills = [...activeSubscriptions]
+            .sort((a, b) => new Date(a.next_billing_date).getTime() - new Date(b.next_billing_date).getTime())
+            .slice(0, 5);
+
+        const dueThisWeek = activeSubscriptions.filter(s => getDaysUntil(s.next_billing_date) <= 7);
+        const dueThisWeekTotal = dueThisWeek.reduce((sum, s) => sum + Number(s.amount), 0);
+
+        return {
+            activeSubscriptions,
+            totalMonthly,
+            upcomingBills,
+            dueThisWeek,
+            dueThisWeekTotal
+        };
+    }, [subscriptions]);
+
+    const { activeSubscriptions, totalMonthly, upcomingBills, dueThisWeek, dueThisWeekTotal } = calculations;
 
     const handleAdd = () => {
         setEditingSubscription(null);

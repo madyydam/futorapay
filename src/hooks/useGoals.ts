@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useMemo } from "react";
 
+import { MOCK_GOALS, GUEST_USER } from "@/lib/mock-data";
+
 export interface Goal {
     id: string;
     user_id: string;
@@ -18,11 +20,13 @@ export interface Goal {
 
 export function useGoals() {
     const queryClient = useQueryClient();
-    const { user } = useAuth();
+    const { user, isGuest } = useAuth();
+    const effectiveUser = isGuest ? GUEST_USER : user;
 
     const { data: goals = [], isLoading, error } = useQuery({
-        queryKey: ["goals", user?.id],
+        queryKey: ["goals", effectiveUser?.id],
         queryFn: async () => {
+            if (isGuest) return MOCK_GOALS;
             if (!user) return [];
             const { data, error } = await supabase
                 .from("goals")
@@ -33,11 +37,15 @@ export function useGoals() {
             if (error) throw error;
             return data as Goal[];
         },
-        enabled: !!user,
+        enabled: !!effectiveUser,
     });
 
     const addGoal = useMutation({
         mutationFn: async (newGoal: Omit<Goal, "id" | "user_id" | "created_at" | "current_amount">) => {
+            if (isGuest) {
+                toast.error("Demo mode: Cannot add goals");
+                return null;
+            }
             if (!user) throw new Error("User not authenticated");
 
             const { data, error } = await supabase
@@ -60,6 +68,10 @@ export function useGoals() {
 
     const updateGoal = useMutation({
         mutationFn: async ({ id, ...updates }: Partial<Goal> & { id: string }) => {
+            if (isGuest) {
+                toast.error("Demo mode: Cannot update goals");
+                return null;
+            }
             const { data, error } = await supabase
                 .from("goals")
                 .update(updates)
@@ -82,6 +94,10 @@ export function useGoals() {
 
     const addSavings = useMutation({
         mutationFn: async ({ id, amount }: { id: string, amount: number }) => {
+            if (isGuest) {
+                toast.error("Demo mode: Cannot add savings");
+                return null;
+            }
             const goal = goals.find(g => g.id === id);
             if (!goal) throw new Error("Goal not found");
 
@@ -109,6 +125,10 @@ export function useGoals() {
 
     const deleteGoal = useMutation({
         mutationFn: async (id: string) => {
+            if (isGuest) {
+                toast.error("Demo mode: Cannot delete goals");
+                return null;
+            }
             const { error } = await supabase
                 .from("goals")
                 .delete()

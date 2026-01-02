@@ -150,11 +150,15 @@
   .glass-card {
     @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl;
     box-shadow: var(--shadow-card);
+    will-change: transform, opacity;
+    transform: translateZ(0);
   }
 
   .glass-card-elevated {
     @apply bg-card/90 backdrop-blur-xl border border-border/60 rounded-xl;
     box-shadow: var(--shadow-elevated);
+    will-change: transform, opacity;
+    transform: translateZ(0);
   }
 
   .gradient-text {

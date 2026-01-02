@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,10 +38,13 @@ export default function Expenses() {
   const [searchQuery, setSearchQuery] = useState("");
   const { transactions, isLoading, deleteTransaction } = useTransactions();
 
-  const filteredExpenses = transactions
-    ?.filter(t => t.type === 'expense')
-    .filter(t => activeCategory === "All" || t.category.toLowerCase() === activeCategory.toLowerCase())
-    .filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredExpenses = useMemo(() =>
+    transactions
+      ?.filter(t => t.type === 'expense')
+      .filter(t => activeCategory === "All" || t.category.toLowerCase() === activeCategory.toLowerCase())
+      .filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    [transactions, activeCategory, searchQuery]
+  );
 
   return (
     <DashboardLayout>

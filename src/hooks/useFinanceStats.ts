@@ -71,8 +71,8 @@ export function useFinanceStats() {
         };
     }, [transactions]);
 
-    return {
+    return useMemo(() => ({
         stats,
         loading: isLoading,
-    };
+    }), [stats, isLoading]);
 }
