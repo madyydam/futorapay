@@ -163,6 +163,14 @@ export default function Reports() {
         });
     };
 
+    const handleDownload = (format: string, reportName: string) => {
+        toast({
+            title: "Downloading Report",
+            description: `Preparing ${reportName} (${format.toUpperCase()})...`,
+        });
+        // In a real app, this would trigger a file download from the generated URL
+    };
+
     const getReportIcon = (typeId: string) => {
         const type = reportTypes.find((t) => t.id === typeId);
         return type ? type.icon : FileText;
@@ -397,15 +405,30 @@ export default function Reports() {
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <Button variant="outline" size="sm" className="gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-2"
+                                                    onClick={() => handleDownload('pdf', report.name)}
+                                                >
                                                     <FileText className="w-4 h-4" />
                                                     PDF
                                                 </Button>
-                                                <Button variant="outline" size="sm" className="gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-2"
+                                                    onClick={() => handleDownload('excel', report.name)}
+                                                >
                                                     <FileSpreadsheet className="w-4 h-4" />
                                                     Excel
                                                 </Button>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8"
+                                                    onClick={() => handleDownload('zip', report.name)}
+                                                >
                                                     <Download className="w-4 h-4" />
                                                 </Button>
                                             </div>
