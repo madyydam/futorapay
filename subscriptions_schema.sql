@@ -1,7 +1,18 @@
 -- =====================================================
--- SUBSCRIPTIONS TABLE
+-- SUBSCRIPTIONS TABLE - STANDALONE VERSION
+-- Run this FIRST before using the subscriptions feature
 -- =====================================================
 
+-- Create the update timestamp function if it doesn't exist
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = TIMEZONE('utc'::text, NOW());
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create subscriptions table
 CREATE TABLE IF NOT EXISTS subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
@@ -41,18 +52,34 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 -- Enable RLS
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can manage own subscriptions" ON subscriptions;
+
 -- RLS Policies
 CREATE POLICY "Users can manage own subscriptions" ON subscriptions
   FOR ALL USING (user_id = auth.uid());
 
--- Index for performance
+-- Drop existing indexes if they exist
+DROP INDEX IF EXISTS idx_subscriptions_user;
+DROP INDEX IF EXISTS idx_subscriptions_next_billing;
+DROP INDEX IF EXISTS idx_subscriptions_active;
+
+-- Create indexes for performance
 CREATE INDEX idx_subscriptions_user ON subscriptions(user_id);
 CREATE INDEX idx_subscriptions_next_billing ON subscriptions(next_billing_date);
 CREATE INDEX idx_subscriptions_active ON subscriptions(is_active) WHERE is_active = TRUE;
 
--- Trigger for updated_at
-CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Drop existing trigger if it exists
+DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON subscriptions;
+
+-- Create trigger for updated_at
+CREATE TRIGGER update_subscriptions_updated_at 
+  BEFORE UPDATE ON subscriptions
+  FOR EACH ROW 
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Drop existing function if it exists
+DROP FUNCTION IF EXISTS get_upcoming_subscriptions(INTEGER);
 
 -- Function to get upcoming bills
 CREATE OR REPLACE FUNCTION get_upcoming_subscriptions(days_ahead INTEGER DEFAULT 30)
@@ -85,3 +112,10 @@ BEGIN
   ORDER BY s.next_billing_date ASC;
 END;
 $$;
+
+-- Success message
+DO $$
+BEGIN
+  RAISE NOTICE 'Subscriptions table created successfully!';
+  RAISE NOTICE 'You can now use the Subscriptions feature in FutoraPay.';
+END $$;
