@@ -140,9 +140,19 @@ export default function Auth() {
                     </div>
 
                     <Tabs defaultValue="login" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 mb-2 bg-transparent px-6">
-                            <TabsTrigger value="login" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Login</TabsTrigger>
-                            <TabsTrigger value="signup" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Signup</TabsTrigger>
+                        <TabsList className="grid w-full grid-cols-2 mb-4 lg:mb-6 bg-secondary/50 p-1 h-auto">
+                            <TabsTrigger
+                                value="login"
+                                className="data-[state=active]:bg-background data-[state=active]:shadow-md py-3 text-base font-medium transition-all"
+                            >
+                                Login
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="signup"
+                                className="data-[state=active]:bg-background data-[state=active]:shadow-md py-3 text-base font-medium transition-all"
+                            >
+                                Signup
+                            </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="login">
@@ -181,7 +191,11 @@ export default function Auth() {
                                         </div>
                                     </CardContent>
                                     <CardFooter className="flex flex-col space-y-4">
-                                        <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90" disabled={loading}>
+                                        <Button
+                                            type="submit"
+                                            className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 h-12 text-base font-semibold"
+                                            disabled={loading}
+                                        >
                                             {loading ? "Signing in..." : "Sign In"} <ArrowRight className="w-4 h-4 ml-2" />
                                         </Button>
                                     </CardFooter>
@@ -198,43 +212,48 @@ export default function Auth() {
                                 <form onSubmit={handleSignup}>
                                     <CardContent className="space-y-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="signup-name">Full Name</Label>
+                                            <Label htmlFor="fullName">Full Name</Label>
                                             <Input
-                                                id="signup-name"
+                                                id="fullName"
                                                 type="text"
                                                 placeholder="John Doe"
                                                 value={fullName}
                                                 onChange={(e) => setFullName(e.target.value)}
                                                 required
-                                                className="bg-background/50"
+                                                className="bg-background/50 mobile-optimized-input"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="signup-email">Email</Label>
+                                            <Label htmlFor="email-signup">Email</Label>
                                             <Input
-                                                id="signup-email"
+                                                id="email-signup"
                                                 type="email"
                                                 placeholder="name@example.com"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 required
-                                                className="bg-background/50"
+                                                className="bg-background/50 mobile-optimized-input"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="signup-password">Password</Label>
+                                            <Label htmlFor="password-signup">Password</Label>
                                             <Input
-                                                id="signup-password"
+                                                id="password-signup"
                                                 type="password"
+                                                placeholder="••••••••"
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
                                                 required
-                                                className="bg-background/50"
+                                                className="bg-background/50 mobile-optimized-input"
                                             />
                                         </div>
                                     </CardContent>
                                     <CardFooter className="flex flex-col space-y-4">
-                                        <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90" disabled={loading}>
+                                        <Button
+                                            type="submit"
+                                            className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 h-12 text-base font-semibold"
+                                            disabled={loading}
+                                        >
                                             {loading ? "Creating account..." : "Sign Up"} <ArrowRight className="w-4 h-4 ml-2" />
                                         </Button>
                                         <p className="text-xs text-center text-muted-foreground px-4">
