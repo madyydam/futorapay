@@ -2,19 +2,17 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Wallet,
-  Target,
-  TrendingUp,
   User,
-  Landmark,
+  DollarSign,
+  Brain,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Landmark, label: "Accounts", path: "/accounts" },
+  { icon: LayoutDashboard, label: "Home", path: "/" },
+  { icon: DollarSign, label: "Net Worth", path: "/net-worth" },
   { icon: Wallet, label: "Expenses", path: "/expenses" },
-  { icon: TrendingUp, label: "Income", path: "/income" },
-  { icon: Target, label: "Goals", path: "/goals" },
+  { icon: Brain, label: "Insights", path: "/insights" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
 
@@ -33,19 +31,19 @@ export function MobileNav() {
               className={cn(
                 "flex flex-col items-center gap-1 py-2 px-3 rounded-lg transition-all duration-200",
                 isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-primary bg-primary/5"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
               )}
             >
               <div
                 className={cn(
-                  "p-2 rounded-lg transition-all duration-200",
-                  isActive && "bg-primary/10"
+                  "p-1.5 transition-all duration-200",
+                  isActive && "text-primary"
                 )}
               >
                 <item.icon className="w-5 h-5" />
               </div>
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
           );
         })}

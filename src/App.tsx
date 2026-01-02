@@ -10,6 +10,10 @@ import Expenses from "./pages/Expenses";
 import Income from "./pages/Income";
 import Goals from "./pages/Goals";
 import Accounts from "./pages/Accounts";
+import NetWorth from "./pages/NetWorth";
+import Scenario from "./pages/Scenario";
+import Reports from "./pages/Reports";
+import Insights from "./pages/Insights";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Notifications from "./pages/Notifications";
@@ -29,10 +33,14 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/" element={<Index />} />
+              <Route path="/accounts" element={<Accounts />} />
+              <Route path="/net-worth" element={<NetWorth />} />
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/income" element={<Income />} />
               <Route path="/goals" element={<Goals />} />
-              <Route path="/accounts" element={<Accounts />} />
+              <Route path="/scenario" element={<Scenario />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/insights" element={<Insights />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/notifications" element={<Notifications />} />

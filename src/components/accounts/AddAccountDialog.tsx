@@ -33,11 +33,15 @@ import { useAuth } from "@/components/auth/AuthProvider";
 
 const formSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
-    type: z.enum(["bank", "cash", "credit", "investment", "loan"] as [AccountType, ...AccountType[]]),
-    opening_balance: z.string().refine((val) => !isNaN(Number(val)), {
+    type: z.enum([
+        "cash", "bank_checking", "bank_savings", "credit_card", "investment",
+        "loan", "mortgage", "real_estate", "crypto", "other_asset", "other_liability"
+    ] as [string, ...string[]]),
+    current_balance: z.string().refine((val) => !isNaN(Number(val)), {
         message: "Balance must be a number",
     }),
     currency: z.string().default("INR"),
+    institution_name: z.string().optional(),
 });
 
 export function AddAccountDialog() {
@@ -49,9 +53,10 @@ export function AddAccountDialog() {
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: "",
-            type: "bank",
-            opening_balance: "0",
+            type: "bank_checking",
+            current_balance: "0",
             currency: "INR",
+            institution_name: "",
         },
     });
 
@@ -61,13 +66,19 @@ export function AddAccountDialog() {
             return;
         }
 
+        // Determine classification based on type
+        const liabilityTypes = ["credit_card", "loan", "mortgage", "other_liability"];
+        const classification = liabilityTypes.includes(values.type) ? "liability" : "asset";
+
         createAccount.mutate(
             {
                 name: values.name,
-                type: values.type,
-                opening_balance: Number(values.opening_balance),
+                type: values.type as AccountType,
+                current_balance: Number(values.current_balance),
                 currency: values.currency,
                 user_id: user.id,
+                classification: classification,
+                institution_name: values.institution_name,
             },
             {
                 onSuccess: () => {
@@ -110,6 +121,20 @@ export function AddAccountDialog() {
 
                         <FormField
                             control={form.control}
+                            name="institution_name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Institution (Optional)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g. HDFC Bank" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
                             name="type"
                             render={({ field }) => (
                                 <FormItem>
@@ -121,11 +146,17 @@ export function AddAccountDialog() {
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="bank">Bank Account</SelectItem>
+                                            <SelectItem value="bank_checking">Bank Checking</SelectItem>
+                                            <SelectItem value="bank_savings">Bank Savings</SelectItem>
                                             <SelectItem value="cash">Cash Wallet</SelectItem>
-                                            <SelectItem value="credit">Credit Card</SelectItem>
+                                            <SelectItem value="credit_card">Credit Card</SelectItem>
                                             <SelectItem value="investment">Investment</SelectItem>
-                                            <SelectItem value="loan">Loan</SelectItem>
+                                            <SelectItem value="loan">Personal Loan</SelectItem>
+                                            <SelectItem value="mortgage">Mortgage</SelectItem>
+                                            <SelectItem value="real_estate">Real Estate</SelectItem>
+                                            <SelectItem value="crypto">Crypto</SelectItem>
+                                            <SelectItem value="other_asset">Other Asset</SelectItem>
+                                            <SelectItem value="other_liability">Other Liability</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -135,10 +166,10 @@ export function AddAccountDialog() {
 
                         <FormField
                             control={form.control}
-                            name="opening_balance"
+                            name="current_balance"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Opening Balance</FormLabel>
+                                    <FormLabel>Current Balance</FormLabel>
                                     <FormControl>
                                         <Input type="number" step="0.01" {...field} />
                                     </FormControl>

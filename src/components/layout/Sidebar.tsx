@@ -12,6 +12,10 @@ import {
   ChevronRight,
   LogOut,
   Landmark,
+  DollarSign,
+  Sparkles,
+  FileText,
+  Brain,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,10 +23,14 @@ import { useAuth } from "@/components/auth/AuthProvider";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: DollarSign, label: "Net Worth", path: "/net-worth" },
   { icon: Landmark, label: "Accounts", path: "/accounts" },
   { icon: Wallet, label: "Expenses", path: "/expenses" },
   { icon: TrendingUp, label: "Income", path: "/income" },
   { icon: Target, label: "Goals", path: "/goals" },
+  { icon: Sparkles, label: "Scenario", path: "/scenario" },
+  { icon: FileText, label: "Reports", path: "/reports" },
+  { icon: Brain, label: "Insights", path: "/insights" },
 ];
 
 const bottomNavItems = [

@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Account } from "@/hooks/useAccounts";
-import { ArrowUpRight, ArrowDownRight, CreditCard, Wallet, Building2, TrendingUp, PiggyBank, Trash2 } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, CreditCard, Wallet, Building2, TrendingUp, PiggyBank, Trash2, Landmark } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 interface AccountCardProps {
@@ -13,12 +13,24 @@ interface AccountCardProps {
 export function AccountCard({ account, onDelete }: AccountCardProps) {
     const getIcon = () => {
         switch (account.type) {
-            case "bank": return <Building2 className="h-5 w-5 text-blue-500" />;
-            case "cash": return <Wallet className="h-5 w-5 text-green-500" />;
-            case "credit": return <CreditCard className="h-5 w-5 text-purple-500" />;
-            case "investment": return <TrendingUp className="h-5 w-5 text-indigo-500" />;
-            case "loan": return <PiggyBank className="h-5 w-5 text-orange-500" />; // Or another icon
-            default: return <Wallet className="h-5 w-5" />;
+            case "bank_checking":
+            case "bank_savings":
+                return <Building2 className="h-5 w-5 text-blue-500" />;
+            case "cash":
+                return <Wallet className="h-5 w-5 text-green-500" />;
+            case "credit_card":
+                return <CreditCard className="h-5 w-5 text-purple-500" />;
+            case "investment":
+            case "crypto":
+                return <TrendingUp className="h-5 w-5 text-indigo-500" />;
+            case "real_estate":
+            case "mortgage":
+                return <Landmark className="h-5 w-5 text-amber-500" />;
+            case "loan":
+            case "other_liability":
+                return <ArrowDownRight className="h-5 w-5 text-red-500" />;
+            default:
+                return <Wallet className="h-5 w-5" />;
         }
     };
 
