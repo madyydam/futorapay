@@ -77,7 +77,7 @@ export default function Auth() {
             <main className="flex-grow flex flex-col lg:flex-row items-center justify-center p-4 lg:p-8 gap-8 lg:gap-12 max-w-7xl mx-auto w-full">
 
                 {/* Left Side: Brand & SEO Content - HIDDEN ON MOBILE */}
-                <div className="hidden lg:flex flex-1 space-y-8 text-left animate-fade-in max-w-2xl">
+                <div className="hidden lg:block flex-1 space-y-8 text-left animate-fade-in max-w-2xl">
                     <div className="space-y-4">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium border border-primary/20">
                             Built by Futora Group of Companies
