@@ -1,4 +1,5 @@
-
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -9,8 +10,35 @@ import { Moon, Sun, Monitor, LogOut } from "lucide-react";
 
 export default function Settings() {
     const { signOut, user } = useAuth();
-    // In a real app, these would be connected to a theme context or user profile updater
-    // For now, we'll keep it as a UI shell that "works" visually
+
+    // Theme State
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        const savedTheme = localStorage.getItem("theme");
+        return savedTheme ? savedTheme === "dark" : true;
+    });
+
+    useEffect(() => {
+        const root = window.document.documentElement;
+        if (isDarkMode) {
+            root.classList.remove("light");
+            root.classList.add("dark");
+            localStorage.setItem("theme", "dark");
+        } else {
+            root.classList.remove("dark");
+            root.classList.add("light");
+            localStorage.setItem("theme", "light");
+        }
+    }, [isDarkMode]);
+
+    const handleExport = async () => {
+        try {
+            const { exportUserData } = await import("@/lib/reports");
+            await exportUserData();
+            toast.success("Data export started");
+        } catch (error) {
+            toast.error("Failed to export data");
+        }
+    };
 
     return (
         <DashboardLayout>
@@ -37,14 +65,18 @@ export default function Settings() {
                                     <Moon className="h-4 w-4" />
                                     <Label htmlFor="dark-mode" className="text-base">Dark Mode</Label>
                                 </div>
-                                <Switch id="dark-mode" defaultChecked />
+                                <Switch
+                                    id="dark-mode"
+                                    checked={isDarkMode}
+                                    onCheckedChange={setIsDarkMode}
+                                />
                             </div>
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between opacity-50 cursor-not-allowed">
                                 <div className="flex items-center space-x-2">
                                     <Monitor className="h-4 w-4" />
                                     <Label htmlFor="system-theme" className="text-base">Use System Theme</Label>
                                 </div>
-                                <Switch id="system-theme" />
+                                <Switch id="system-theme" disabled />
                             </div>
                         </CardContent>
                     </Card>
@@ -71,7 +103,7 @@ export default function Settings() {
                         </CardContent>
                     </Card>
 
-                    {/* Data Management Placeholder - For Manual Finance Vision */}
+                    {/* Data Management */}
                     <Card>
                         <CardHeader>
                             <CardTitle>Data Management</CardTitle>
@@ -85,7 +117,7 @@ export default function Settings() {
                                     <Label className="text-base">Export Data</Label>
                                     <p className="text-sm text-muted-foreground">Download all your transactions and account data as JSON.</p>
                                 </div>
-                                <Button variant="outline">Export JSON</Button>
+                                <Button variant="outline" onClick={handleExport}>Export JSON</Button>
                             </div>
                         </CardContent>
                     </Card>

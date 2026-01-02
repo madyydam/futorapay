@@ -4,7 +4,7 @@ import {
   Wallet,
   User,
   DollarSign,
-  Brain,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ const navItems = [
   { icon: LayoutDashboard, label: "Home", path: "/" },
   { icon: DollarSign, label: "Net Worth", path: "/net-worth" },
   { icon: Wallet, label: "Expenses", path: "/expenses" },
-  { icon: Brain, label: "Insights", path: "/insights" },
+  { icon: TrendingUp, label: "Income", path: "/income" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
 

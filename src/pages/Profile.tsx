@@ -169,7 +169,25 @@ export default function Profile() {
 
         {/* Actions */}
         <div className="glass-card overflow-hidden animate-slide-up" style={{ animationDelay: "200ms" }}>
-          <button className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors">
+          <button
+            onClick={async () => {
+              try {
+                await import("@/lib/reports").then(m => m.exportUserData());
+                // We'll use a simple alert if toast isn't easily available or add toast import
+                // But EditProfileDialog uses sonner, so let's use sonner's toast if possible or just import it.
+                // Let's import toast from sonner at top first. 
+                // Wait, I can't add imports in this chunk easily without affecting top. 
+                // I will add the onClick handler here and use a dirty import or assume I added import in next step.
+                // Actually, I can just use dynamic import for the library logic or window.alert for now if lazy.
+                // Better: Update imports first in a separate call or use a multi-replace. 
+                // I'll stick to a simple promise chain here for now.
+              } catch (e) {
+                console.error(e);
+                alert("Failed to export data");
+              }
+            }}
+            className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
+          >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-secondary">
                 <Download className="w-4 h-4 text-muted-foreground" />

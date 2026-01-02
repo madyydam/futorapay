@@ -56,6 +56,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { downloadReport } from "@/lib/reports";
+import { supabase } from "@/lib/supabase";
 
 type ReportType = {
     id: string;
@@ -140,6 +142,15 @@ const generatedReports = [
         status: "completed",
         hasSnapshot: true,
     },
+    {
+        id: "4",
+        name: "Cash Flow Statement",
+        type: "cash_flow",
+        period: "November 2025",
+        generatedAt: new Date("2025-11-30"),
+        status: "completed",
+        hasSnapshot: true,
+    },
 ];
 
 export default function Reports() {
@@ -151,7 +162,7 @@ export default function Reports() {
 
     // Preview State
     const [showPreview, setShowPreview] = useState(false);
-    const [previewReport, setPreviewReport] = useState<typeof generatedReports[0] | null>(null);
+    const [previewReport, setPreviewReport] = useState<any>(null);
 
     const handleGenerateReport = async () => {
         if (!selectedReportType) {
@@ -165,7 +176,7 @@ export default function Reports() {
 
         setIsGenerating(true);
 
-        // Simulate report generation
+        // Simulate report generation (2 seconds)
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         setIsGenerating(false);
@@ -177,12 +188,54 @@ export default function Reports() {
         });
     };
 
-    const handleDownload = (format: string, reportName: string) => {
-        toast({
-            title: "Downloading Report",
-            description: `Preparing ${reportName} (${format.toUpperCase()})...`,
-        });
-        // In a real app, this would trigger a file download from the generated URL
+    const handleDownload = async (format: string, reportName: string) => {
+        try {
+            toast({
+                title: "Downloading Report",
+                description: `Preparing ${reportName} (${format.toUpperCase()})...`,
+            });
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                toast({
+                    title: "Authentication Error",
+                    description: "You must be logged in to download reports.",
+                    variant: "destructive"
+                });
+                return;
+            }
+
+            // Fetch workspace (assuming single workspace for now, same as Accounts)
+            const { data: workspace, error: wsError } = await supabase
+                .from('workspaces')
+                .select('id')
+                .eq('owner_id', user.id)
+                .single();
+
+            if (wsError || !workspace) {
+                toast({
+                    title: "Workspace Error",
+                    description: "Could not find active workspace.",
+                    variant: "destructive"
+                });
+                return;
+            }
+
+            await downloadReport(format as any, 'generic', workspace.id, reportName); // 'generic' is placeholder ID
+
+            toast({
+                title: "Download Started",
+                description: "Your report should begin downloading shortly.",
+            });
+
+        } catch (error: any) {
+            console.error("Download failed:", error);
+            toast({
+                title: "Download Failed",
+                description: error.message || "An error occurred while generating the report.",
+                variant: "destructive"
+            });
+        }
     };
 
     const handlePreview = (report: typeof generatedReports[0]) => {
