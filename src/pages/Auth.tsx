@@ -276,7 +276,7 @@ export default function Auth() {
                             FutoraPay is a next-generation financial management platform developed by the <strong className="text-primary">Futora Group of Companies</strong>.
                         </p>
                         <p>
-                            Founded by <strong className="text-foreground">Madhur Dhadve</strong>, FutoraPay helps individuals, freelancers, and businesses manage finances with clarity, automation, and intelligence.
+                            FutoraPay helps individuals, freelancers, and businesses manage finances with clarity, automation, and intelligence.
                         </p>
                     </div>
                 </div>
@@ -289,7 +289,7 @@ export default function Auth() {
                         © {new Date().getFullYear()} <strong className="text-foreground">FutoraPay</strong>. All rights reserved.
                     </p>
                     <p>
-                        A product of the <strong className="text-foreground">Futora Group of Companies</strong>, founded by <strong className="text-foreground">Madhur Dhadve</strong>.
+                        A product of the <strong className="text-foreground">Futora Group of Companies</strong>.
                     </p>
                 </div>
             </footer>
