@@ -32,8 +32,11 @@ const categoryIcons: Record<string, any> = {
   other: HelpCircle,
 };
 
+import { useNavigate } from "react-router-dom";
+
 export const RecentTransactions = memo(function RecentTransactions() {
   const { transactions, isLoading } = useTransactions();
+  const navigate = useNavigate();
 
   // Show only last 5 transactions for the dashboard
   const displayTransactions = transactions?.slice(0, 5) || [];
@@ -45,7 +48,10 @@ export const RecentTransactions = memo(function RecentTransactions() {
           <h3 className="font-semibold text-lg text-foreground">Recent Transactions</h3>
           <p className="text-sm text-muted-foreground">Your latest activity</p>
         </div>
-        <button className="text-sm text-primary hover:text-primary/80 transition-colors font-medium">
+        <button
+          onClick={() => navigate('/expenses')}
+          className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+        >
           View All
         </button>
       </div>
