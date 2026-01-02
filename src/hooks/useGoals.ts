@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useMemo } from "react";
 
 export interface Goal {
     id: string;
@@ -16,28 +18,31 @@ export interface Goal {
 
 export function useGoals() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     const { data: goals = [], isLoading, error } = useQuery({
-        queryKey: ["goals"],
+        queryKey: ["goals", user?.id],
         queryFn: async () => {
+            if (!user) return [];
             const { data, error } = await supabase
                 .from("goals")
                 .select("*")
+                .eq("user_id", user.id)
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
             return data as Goal[];
         },
+        enabled: !!user,
     });
 
     const addGoal = useMutation({
         mutationFn: async (newGoal: Omit<Goal, "id" | "user_id" | "created_at" | "current_amount">) => {
-            const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("User not authenticated");
 
             const { data, error } = await supabase
                 .from("goals")
-                .insert([{ ...newGoal, user_id: user.id }])
+                .insert([{ ...newGoal, user_id: user.id, current_amount: 0 }])
                 .select()
                 .single();
 
@@ -45,7 +50,7 @@ export function useGoals() {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["goals"] });
+            queryClient.invalidateQueries({ queryKey: ["goals", user?.id] });
             toast.success("Savings goal created!");
         },
         onError: (error: any) => {
@@ -59,6 +64,7 @@ export function useGoals() {
                 .from("goals")
                 .update(updates)
                 .eq("id", id)
+                .eq("user_id", user?.id)
                 .select()
                 .single();
 
@@ -66,7 +72,7 @@ export function useGoals() {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["goals"] });
+            queryClient.invalidateQueries({ queryKey: ["goals", user?.id] });
             toast.success("Goal updated");
         },
         onError: (error: any) => {
@@ -76,7 +82,6 @@ export function useGoals() {
 
     const addSavings = useMutation({
         mutationFn: async ({ id, amount }: { id: string, amount: number }) => {
-            // first get current amount
             const goal = goals.find(g => g.id === id);
             if (!goal) throw new Error("Goal not found");
 
@@ -86,6 +91,7 @@ export function useGoals() {
                 .from("goals")
                 .update({ current_amount: newAmount })
                 .eq("id", id)
+                .eq("user_id", user?.id)
                 .select()
                 .single();
 
@@ -93,7 +99,7 @@ export function useGoals() {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["goals"] });
+            queryClient.invalidateQueries({ queryKey: ["goals", user?.id] });
             toast.success("Added savings to goal!");
         },
         onError: (error: any) => {
@@ -103,11 +109,15 @@ export function useGoals() {
 
     const deleteGoal = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase.from("goals").delete().eq("id", id);
+            const { error } = await supabase
+                .from("goals")
+                .delete()
+                .eq("id", id)
+                .eq("user_id", user?.id);
             if (error) throw error;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["goals"] });
+            queryClient.invalidateQueries({ queryKey: ["goals", user?.id] });
             toast.success("Goal deleted");
         },
         onError: (error: any) => {
@@ -115,7 +125,7 @@ export function useGoals() {
         },
     });
 
-    return {
+    return useMemo(() => ({
         goals,
         isLoading,
         error,
@@ -123,5 +133,5 @@ export function useGoals() {
         updateGoal,
         addSavings,
         deleteGoal,
-    };
+    }), [goals, isLoading, error, addGoal, updateGoal, addSavings, deleteGoal]);
 }

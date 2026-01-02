@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useMemo } from "react";
 
 interface MonthlySummary {
     month_start: string;
@@ -17,37 +19,45 @@ interface CategorySummary {
 }
 
 export function useAnalytics() {
+    const { user } = useAuth();
+
     const { data: monthlySummary, isLoading: monthlyLoading } = useQuery({
-        queryKey: ["analytics", "monthly"],
+        queryKey: ["analytics", "monthly", user?.id],
         queryFn: async () => {
+            if (!user) return [];
             const { data, error } = await supabase
                 .from("view_analytics_monthly_summary")
                 .select("*")
+                .eq("user_id", user.id)
                 .order("month_start", { ascending: true })
                 .limit(6);
 
             if (error) throw error;
             return (data as MonthlySummary[]) || [];
         },
+        enabled: !!user,
     });
 
     const { data: categorySummary, isLoading: categoryLoading } = useQuery({
-        queryKey: ["analytics", "category"],
+        queryKey: ["analytics", "category", user?.id],
         queryFn: async () => {
+            if (!user) return [];
             const currentMonth = new Date().toISOString().slice(0, 7) + "-01";
             const { data, error } = await supabase
                 .from("view_analytics_category_summary")
                 .select("*")
+                .eq("user_id", user.id)
                 .eq("month_start", currentMonth);
 
             if (error) throw error;
             return (data as CategorySummary[]) || [];
         },
+        enabled: !!user,
     });
 
-    return {
+    return useMemo(() => ({
         monthlySummary,
         categorySummary,
         isLoading: monthlyLoading || categoryLoading,
-    };
+    }), [monthlySummary, categorySummary, monthlyLoading, categoryLoading]);
 }

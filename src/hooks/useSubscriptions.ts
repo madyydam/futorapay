@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useMemo } from "react";
 
 export interface Subscription {
     id: string;
@@ -26,23 +28,26 @@ export interface Subscription {
 
 export function useSubscriptions() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     const { data: subscriptions, isLoading, error } = useQuery({
-        queryKey: ["subscriptions"],
+        queryKey: ["subscriptions", user?.id],
         queryFn: async () => {
+            if (!user) return [];
             const { data, error } = await supabase
                 .from("subscriptions")
                 .select("*")
+                .eq("user_id", user.id)
                 .order("next_billing_date", { ascending: true });
 
             if (error) throw error;
             return data as Subscription[];
         },
+        enabled: !!user,
     });
 
     const addSubscription = useMutation({
         mutationFn: async (newSub: Omit<Subscription, "id" | "user_id" | "created_at" | "updated_at">) => {
-            const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("User not authenticated");
 
             const { data, error } = await supabase
@@ -55,7 +60,7 @@ export function useSubscriptions() {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+            queryClient.invalidateQueries({ queryKey: ["subscriptions", user?.id] });
             toast.success("Subscription added successfully");
         },
         onError: (error: any) => {
@@ -69,6 +74,7 @@ export function useSubscriptions() {
                 .from("subscriptions")
                 .update(updates)
                 .eq("id", id)
+                .eq("user_id", user?.id)
                 .select()
                 .single();
 
@@ -76,7 +82,7 @@ export function useSubscriptions() {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+            queryClient.invalidateQueries({ queryKey: ["subscriptions", user?.id] });
             toast.success("Subscription updated");
         },
         onError: (error: any) => {
@@ -86,11 +92,15 @@ export function useSubscriptions() {
 
     const deleteSubscription = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase.from("subscriptions").delete().eq("id", id);
+            const { error } = await supabase
+                .from("subscriptions")
+                .delete()
+                .eq("id", id)
+                .eq("user_id", user?.id);
             if (error) throw error;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+            queryClient.invalidateQueries({ queryKey: ["subscriptions", user?.id] });
             toast.success("Subscription deleted");
         },
         onError: (error: any) => {
@@ -103,12 +113,13 @@ export function useSubscriptions() {
             const { error } = await supabase
                 .from("subscriptions")
                 .update({ is_active })
-                .eq("id", id);
+                .eq("id", id)
+                .eq("user_id", user?.id);
 
             if (error) throw error;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+            queryClient.invalidateQueries({ queryKey: ["subscriptions", user?.id] });
             toast.success("Subscription status updated");
         },
         onError: (error: any) => {
@@ -116,7 +127,7 @@ export function useSubscriptions() {
         },
     });
 
-    return {
+    return useMemo(() => ({
         subscriptions: subscriptions || [],
         isLoading,
         error,
@@ -124,5 +135,5 @@ export function useSubscriptions() {
         updateSubscription,
         deleteSubscription,
         toggleSubscription,
-    };
+    }), [subscriptions, isLoading, error, addSubscription, updateSubscription, deleteSubscription, toggleSubscription]);
 }

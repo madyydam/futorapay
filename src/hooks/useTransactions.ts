@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useMemo } from "react";
 
 export interface Transaction {
     id: string;
@@ -17,23 +19,26 @@ export interface Transaction {
 
 export function useTransactions() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     const { data: transactions, isLoading, error } = useQuery({
-        queryKey: ["transactions"],
+        queryKey: ["transactions", user?.id],
         queryFn: async () => {
+            if (!user) return [];
             const { data, error } = await supabase
                 .from("transactions")
                 .select("*")
+                .eq("user_id", user.id)
                 .order("date", { ascending: false });
 
             if (error) throw error;
             return data as Transaction[];
         },
+        enabled: !!user,
     });
 
     const addTransaction = useMutation({
         mutationFn: async (newTransaction: Omit<Transaction, "id" | "user_id" | "created_at">) => {
-            const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("User not authenticated");
 
             const { data, error } = await supabase
@@ -46,7 +51,7 @@ export function useTransactions() {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["transactions", user?.id] });
             toast.success("Transaction added successfully");
         },
         onError: (error: any) => {
@@ -60,6 +65,7 @@ export function useTransactions() {
                 .from("transactions")
                 .update(updates)
                 .eq("id", id)
+                .eq("user_id", user?.id)
                 .select()
                 .single();
 
@@ -67,7 +73,7 @@ export function useTransactions() {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["transactions", user?.id] });
             toast.success("Transaction updated");
         },
         onError: (error: any) => {
@@ -77,11 +83,15 @@ export function useTransactions() {
 
     const deleteTransaction = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase.from("transactions").delete().eq("id", id);
+            const { error } = await supabase
+                .from("transactions")
+                .delete()
+                .eq("id", id)
+                .eq("user_id", user?.id);
             if (error) throw error;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["transactions", user?.id] });
             toast.success("Transaction deleted");
         },
         onError: (error: any) => {
@@ -89,12 +99,12 @@ export function useTransactions() {
         },
     });
 
-    return {
+    return useMemo(() => ({
         transactions,
         isLoading,
         error,
         addTransaction,
         updateTransaction,
         deleteTransaction,
-    };
+    }), [transactions, isLoading, error, addTransaction, updateTransaction, deleteTransaction]);
 }

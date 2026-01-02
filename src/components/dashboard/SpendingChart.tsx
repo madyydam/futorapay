@@ -17,20 +17,27 @@ export const SpendingChart = memo(function SpendingChart() {
   const chartData = useMemo(() => {
     if (!transactions) return [];
 
+    // Pre-calculate date objects to avoid repeated parsing
+    const transactionsWithDates = transactions.map(t => ({
+      ...t,
+      dateObj: new Date(t.date)
+    }));
+
     // Last 6 months
-    const months = Array.from({ length: 6 }).map((_, i) => subMonths(startOfMonth(new Date()), 5 - i));
+    const now = new Date();
+    const months = Array.from({ length: 6 }).map((_, i) => subMonths(startOfMonth(now), 5 - i));
 
     return months.map(month => {
       const monthLabel = format(month, "MMM");
-      const monthTransactions = transactions.filter(t => isSameMonth(new Date(t.date), month));
+      const monthTransactions = transactionsWithDates.filter(t => isSameMonth(t.dateObj, month));
 
-      const income = monthTransactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + Number(t.amount), 0);
+      let income = 0;
+      let expenses = 0;
 
-      const expenses = monthTransactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + Number(t.amount), 0);
+      for (const t of monthTransactions) {
+        if (t.type === 'income') income += Number(t.amount);
+        else if (t.type === 'expense') expenses += Number(t.amount);
+      }
 
       return {
         name: monthLabel,
@@ -115,6 +122,7 @@ export const SpendingChart = memo(function SpendingChart() {
                 strokeWidth={2}
                 fill="url(#incomeGradient)"
                 animationDuration={1500}
+                isAnimationActive={true}
               />
               <Area
                 type="monotone"
@@ -123,6 +131,7 @@ export const SpendingChart = memo(function SpendingChart() {
                 strokeWidth={2}
                 fill="url(#expenseGradient)"
                 animationDuration={1500}
+                isAnimationActive={true}
               />
             </AreaChart>
           </ResponsiveContainer>

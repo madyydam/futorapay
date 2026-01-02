@@ -174,10 +174,11 @@
 
   .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
+    will-change: box-shadow;
   }
 
   .animate-slide-up {
-    animation: slide-up 0.5s ease-out forwards;
+    animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     will-change: transform, opacity;
   }
 
@@ -188,6 +189,9 @@
 
   .stat-card {
     @apply glass-card p-5 transition-all duration-300 hover:scale-[1.02] hover:border-primary/30;
+    will-change: transform, border-color;
+    transform: translateZ(0);
+    /* Force GPU layer */
   }
 
   .nav-item {

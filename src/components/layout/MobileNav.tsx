@@ -7,6 +7,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { memo } from "react";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Home", path: "/" },
@@ -16,7 +17,7 @@ const navItems = [
   { icon: User, label: "Profile", path: "/profile" },
 ];
 
-export function MobileNav() {
+export const MobileNav = memo(function MobileNav() {
   const location = useLocation();
 
   return (
@@ -50,4 +51,4 @@ export function MobileNav() {
       </div>
     </nav>
   );
-}
+});

@@ -1,7 +1,8 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useMemo } from "react";
 
 export type AccountType =
     | "cash"
@@ -49,18 +50,22 @@ export type NewAccount = Pick<Account, "name" | "type" | "current_balance" | "cu
 
 export function useAccounts() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     const { data: accounts, isLoading, error } = useQuery({
-        queryKey: ["accounts"],
+        queryKey: ["accounts", user?.id],
         queryFn: async () => {
+            if (!user) return [];
             const { data, error } = await supabase
                 .from("accounts")
                 .select("*")
+                .eq("user_id", user.id)
                 .order("created_at", { ascending: true });
 
             if (error) throw error;
             return data as Account[];
         },
+        enabled: !!user,
     });
 
     const createAccount = useMutation({
@@ -96,7 +101,7 @@ export function useAccounts() {
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["accounts"] });
+            queryClient.invalidateQueries({ queryKey: ["accounts", user?.id] });
             toast.success("Account created successfully");
         },
         onError: (error) => {
@@ -111,7 +116,7 @@ export function useAccounts() {
             if (error) throw error;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["accounts"] });
+            queryClient.invalidateQueries({ queryKey: ["accounts", user?.id] });
             toast.success("Account deleted");
         },
         onError: (error) => {
@@ -119,11 +124,11 @@ export function useAccounts() {
         },
     });
 
-    return {
+    return useMemo(() => ({
         accounts,
         isLoading,
         error,
         createAccount,
         deleteAccount,
-    };
+    }), [accounts, isLoading, error, createAccount, deleteAccount]);
 }

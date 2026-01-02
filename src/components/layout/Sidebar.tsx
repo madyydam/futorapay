@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -41,7 +41,7 @@ const bottomNavItems = [
   { icon: User, label: "Profile", path: "/profile" },
 ];
 
-export function Sidebar() {
+export const Sidebar = memo(function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
@@ -158,4 +158,4 @@ export function Sidebar() {
       </div>
     </aside>
   );
-}
+});

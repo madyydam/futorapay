@@ -1,64 +1,74 @@
 import { Lightbulb, Sparkles } from "lucide-react";
 import { Transaction } from "@/hooks/useTransactions";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { memo, useMemo } from "react";
 
 interface SmartInsightBannerProps {
   transactions: Transaction[];
 }
 
-export function SmartInsightBanner({ transactions }: SmartInsightBannerProps) {
+export const SmartInsightBanner = memo(function SmartInsightBanner({ transactions }: SmartInsightBannerProps) {
   const { user } = useAuth();
-  const userName = user?.user_metadata?.full_name?.split(' ')[0] || "there";
 
-  // Calculate insights
-  const currentMonth = new Date().getMonth();
-  const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+  const insight = useMemo(() => {
+    const userName = user?.user_metadata?.full_name?.split(' ')[0] || "there";
 
-  const currentMonthExpenses = transactions.filter(t => {
-    const d = new Date(t.date);
-    return t.type === 'expense' && d.getMonth() === currentMonth;
-  });
+    // Calculate insights
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
-  const lastMonthExpenses = transactions.filter(t => {
-    const d = new Date(t.date);
-    return t.type === 'expense' && d.getMonth() === lastMonth;
-  });
+    const currentMonthExpenses = transactions.filter(t => {
+      const d = new Date(t.date);
+      return t.type === 'expense' && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
 
-  // Find top category this month
-  const categoryTotals: Record<string, number> = {};
-  currentMonthExpenses.forEach(t => {
-    const cat = t.category.toLowerCase();
-    categoryTotals[cat] = (categoryTotals[cat] || 0) + Number(t.amount);
-  });
+    const lastMonthExpenses = transactions.filter(t => {
+      const d = new Date(t.date);
+      return t.type === 'expense' && d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+    });
 
-  const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
+    // Find top category this month
+    const categoryTotals: Record<string, number> = {};
+    currentMonthExpenses.forEach(t => {
+      const cat = t.category.toLowerCase();
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + Number(t.amount);
+    });
 
-  let insightStart = `Hi ${userName}, `;
-  let insightMessage = "Track your spending to get personalized insights!";
+    const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
 
-  if (topCategory) {
-    const [category, amount] = topCategory;
+    let insightMessage = "Track your spending to get personalized insights!";
 
-    // Compare with last month for this category
-    const lastMonthCategoryTotal = lastMonthExpenses
-      .filter(t => t.category.toLowerCase() === category)
-      .reduce((sum, t) => sum + Number(t.amount), 0);
+    if (topCategory) {
+      const [category, amount] = topCategory;
 
-    if (lastMonthCategoryTotal > 0) {
-      const diff = amount - lastMonthCategoryTotal;
-      const percent = Math.round((diff / lastMonthCategoryTotal) * 100);
+      // Compare with last month for this category
+      const lastMonthCategoryTotal = lastMonthExpenses
+        .filter(t => t.category.toLowerCase() === category)
+        .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      if (diff > 0) {
-        insightMessage = `You've spent ${percent}% more on ${category} this month compared to last month. Consider planning to reduce expenses.`;
+      if (lastMonthCategoryTotal > 0) {
+        const diff = amount - lastMonthCategoryTotal;
+        const percent = Math.round((diff / lastMonthCategoryTotal) * 100);
+
+        if (percent > 0) {
+          insightMessage = `You've spent ${percent}% more on ${category} this month compared to last month. Consider planning to reduce expenses.`;
+        } else if (percent < 0) {
+          insightMessage = `Great job! You've spent ${Math.abs(percent)}% less on ${category} this month compared to last month.`;
+        } else {
+          insightMessage = `Your spending on ${category} is the same as last month.`;
+        }
       } else {
-        insightMessage = `Great job! You've spent ${Math.abs(percent)}% less on ${category} this month compared to last month.`;
+        insightMessage = `Your highest spending is on ${category} (₹${amount.toLocaleString()}) this month.`;
       }
-    } else {
-      insightMessage = `Your highest spending is on ${category} (₹${amount.toLocaleString()}) this month.`;
+    } else if (transactions.length === 0) {
+      insightMessage = "Start adding transactions to see your financial insights here!";
     }
-  } else if (transactions.length === 0) {
-    insightMessage = "Start adding transactions to see your financial insights here!";
-  }
+
+    return { userName, insightMessage };
+  }, [transactions, user]);
 
   return (
     <div className="glass-card-elevated p-5 bg-gradient-to-r from-primary/10 via-card to-accent/10 border-primary/20 animate-slide-up relative overflow-hidden">
@@ -75,11 +85,11 @@ export function SmartInsightBanner({ transactions }: SmartInsightBannerProps) {
             <Sparkles className="w-4 h-4 text-primary animate-pulse" />
           </div>
           <p className="text-muted-foreground leading-relaxed">
-            <span className="text-foreground font-medium">{insightStart}</span>
-            {insightMessage}
+            <span className="text-foreground font-medium">Hi {insight.userName}, </span>
+            {insight.insightMessage}
           </p>
         </div>
       </div>
     </div>
   );
-}
+});

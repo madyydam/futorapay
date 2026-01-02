@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTransactions } from "@/hooks/useTransactions";
-import { memo } from "react";
+import { memo, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 const categoryIcons: Record<string, any> = {
   shopping: ShoppingBag,
@@ -32,14 +33,15 @@ const categoryIcons: Record<string, any> = {
   other: HelpCircle,
 };
 
-import { useNavigate } from "react-router-dom";
-
 export const RecentTransactions = memo(function RecentTransactions() {
   const { transactions, isLoading } = useTransactions();
   const navigate = useNavigate();
 
   // Show only last 5 transactions for the dashboard
-  const displayTransactions = transactions?.slice(0, 5) || [];
+  const displayTransactions = useMemo(() =>
+    transactions?.slice(0, 5) || [],
+    [transactions]
+  );
 
   return (
     <div className="glass-card p-6 animate-slide-up" style={{ animationDelay: "500ms" }}>
@@ -77,7 +79,7 @@ export const RecentTransactions = memo(function RecentTransactions() {
             <p className="text-sm text-muted-foreground">No recent transactions</p>
           </div>
         ) : (
-          displayTransactions.map((transaction, index) => {
+          displayTransactions.map((transaction) => {
             const categoryKey = transaction.category.toLowerCase();
             const Icon = categoryIcons[categoryKey] || categoryIcons.other || ShoppingBag;
             const isIncome = transaction.type === 'income';
