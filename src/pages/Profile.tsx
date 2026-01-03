@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -257,9 +258,9 @@ export default function Profile() {
               { icon: Bell, label: "Notifications", path: "/notifications" },
               { icon: Settings, label: "Settings", path: "/settings" },
             ].map((item) => (
-              <a
+              <Link
                 key={item.label}
-                href={item.path}
+                to={item.path}
                 className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -269,7 +270,7 @@ export default function Profile() {
                   <span className="text-foreground">{item.label}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </a>
+              </Link>
             ))}
           </div>
         </div>
