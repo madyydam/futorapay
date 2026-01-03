@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -44,7 +44,7 @@ const formSchema = z.object({
     institution_name: z.string().optional(),
 });
 
-export function AddAccountDialog() {
+export const AddAccountDialog = memo(function AddAccountDialog() {
     const [open, setOpen] = useState(false);
     const { createAccount } = useAccounts();
     const { user } = useAuth();
@@ -186,4 +186,4 @@ export function AddAccountDialog() {
             </DialogContent>
         </Dialog>
     );
-}
+});

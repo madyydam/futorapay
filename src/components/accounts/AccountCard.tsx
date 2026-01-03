@@ -1,4 +1,4 @@
-
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Account } from "@/hooks/useAccounts";
@@ -10,7 +10,7 @@ interface AccountCardProps {
     onDelete?: (id: string) => void;
 }
 
-export function AccountCard({ account, onDelete }: AccountCardProps) {
+export const AccountCard = memo(function AccountCard({ account, onDelete }: AccountCardProps) {
     const getIcon = () => {
         switch (account.type) {
             case "bank_checking":
@@ -77,4 +77,4 @@ export function AccountCard({ account, onDelete }: AccountCardProps) {
             </CardContent>
         </Card>
     );
-}
+});

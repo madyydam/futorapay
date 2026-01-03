@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -36,7 +36,7 @@ const formSchema = z.object({
 const ICONS = ["Target", "Car", "Home", "Plane", "Smartphone", "GraduationCap", "Gem"];
 const COLORS = ["text-primary", "text-accent", "text-warning", "text-success", "text-purple-400", "text-pink-400"];
 
-export function AddGoalDialog() {
+export const AddGoalDialog = memo(function AddGoalDialog() {
     const [open, setOpen] = useState(false);
     const { addGoal } = useGoals();
 
@@ -192,4 +192,4 @@ export function AddGoalDialog() {
             </DialogContent>
         </Dialog>
     );
-}
+});

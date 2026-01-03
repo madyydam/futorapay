@@ -24,7 +24,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
 import { GUEST_USER } from "@/lib/mock-data";
@@ -39,7 +39,7 @@ export default function Profile() {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
   const { user: authUser, signOut, isGuest } = useAuth();
-  const user = (isGuest ? GUEST_USER : authUser) as any;
+  const user = useMemo(() => (isGuest ? GUEST_USER : authUser) as any, [isGuest, authUser]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -54,7 +54,7 @@ export default function Profile() {
     }
   }, [isDarkMode]);
 
-  const settingsGroups = [
+  const settingsGroups = useMemo(() => [
     {
       title: "Account",
       items: [
@@ -133,7 +133,7 @@ export default function Profile() {
         },
       ],
     },
-  ];
+  ], [user, isGuest]);
 
   return (
     <DashboardLayout>
@@ -242,38 +242,6 @@ export default function Profile() {
           </div>
         ))}
 
-        {/* Mobile-Only Navigation Menu */}
-        <div className="lg:hidden glass-card overflow-hidden animate-slide-up" style={{ animationDelay: "300ms" }}>
-          <div className="px-5 py-3 bg-secondary/50 border-b border-border">
-            <h3 className="font-semibold text-foreground">Menu</h3>
-          </div>
-          <div className="divide-y divide-border">
-            {[
-              { icon: Landmark, label: "Accounts", path: "/accounts" },
-              { icon: Target, label: "Goals", path: "/goals" },
-              { icon: RefreshCw, label: "Subscriptions", path: "/subscriptions" },
-              { icon: Sparkles, label: "Scenario", path: "/scenario" },
-              { icon: FileText, label: "Reports", path: "/reports" },
-              { icon: Brain, label: "Insights", path: "/insights" },
-              { icon: Bell, label: "Notifications", path: "/notifications" },
-              { icon: Settings, label: "Settings", path: "/settings" },
-            ].map((item) => (
-              <Link
-                key={item.label}
-                to={item.path}
-                className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-secondary">
-                    <item.icon className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <span className="text-foreground">{item.label}</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </Link>
-            ))}
-          </div>
-        </div>
 
         {/* Actions */}
         <div className="glass-card overflow-hidden animate-slide-up" style={{ animationDelay: "200ms" }}>

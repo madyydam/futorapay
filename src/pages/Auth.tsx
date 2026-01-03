@@ -14,7 +14,7 @@ import {
     CardTitle
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wallet, LogIn, UserPlus, Github, CheckCircle2, ArrowRight, Eye, EyeOff, Play } from "lucide-react";
+import { Wallet, LogIn, UserPlus, Github, CheckCircle2, ArrowRight, Eye, EyeOff, Play, Menu, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 
@@ -98,8 +98,8 @@ export default function Auth() {
             {/* Hero Section / Login Area */}
             <main className="flex-grow flex flex-col lg:flex-row items-center justify-center p-4 lg:p-8 gap-8 lg:gap-12 max-w-7xl mx-auto w-full">
 
-                {/* Left Side: Brand & SEO Content */}
-                <div className="flex-1 space-y-6 lg:space-y-8 text-left animate-fade-in max-w-2xl">
+                {/* Left Side: Brand & SEO Content - HIDDEN ON MOBILE */}
+                <div className="hidden lg:block flex-1 space-y-8 text-left animate-fade-in max-w-2xl">
                     <div className="space-y-4">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20">
                             Built by Futora Group of Companies
@@ -110,16 +110,6 @@ export default function Auth() {
                         <p className="text-base lg:text-lg text-muted-foreground leading-relaxed max-w-xl">
                             FutoraPay is an AI-powered financial management platform designed for modern individuals & businesses. Track, plan, and grow smarter with the Futora ecosystem.
                         </p>
-                        <div className="flex lg:hidden gap-3 pt-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' })}
-                                className="rounded-full border-primary/20 bg-primary/5 text-primary text-xs"
-                            >
-                                Explore Features <ArrowRight className="w-3 h-3 ml-1" />
-                            </Button>
-                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -156,22 +146,15 @@ export default function Auth() {
 
                 {/* Right Side: Auth Form - Optimized for Mobile */}
                 <div id="auth-form" className="w-full max-w-md animate-slide-up bg-card/95 backdrop-blur-xl p-6 lg:p-8 rounded-2xl border border-border/50 shadow-2xl">
-                    {/* Mobile-Only Logo */}
-                    <div className="flex lg:hidden items-center justify-center gap-2 mb-6">
+                    {/* Brand Logo Above Form */}
+                    <div className="flex items-center justify-center gap-2 mb-6">
                         <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
                             <Wallet className="text-primary-foreground w-6 h-6" />
                         </div>
                         <span className="text-2xl font-bold gradient-text">FutoraPay</span>
                     </div>
-                    {/* Desktop Logo */}
-                    <div className="hidden lg:flex items-center justify-center gap-2 mb-6 pt-6">
-                        <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
-                            <Wallet className="w-6 h-6 text-primary-foreground" />
-                        </div>
-                        <span className="text-2xl font-bold">FutoraPay</span>
-                    </div>
 
-                    <Tabs defaultValue="login" className="w-full">
+                    <Tabs defaultValue="signup" className="w-full">
                         <TabsList className="grid w-full grid-cols-2 mb-4 lg:mb-6 bg-secondary/50 p-1 h-auto">
                             <TabsTrigger
                                 value="login"
@@ -334,7 +317,7 @@ export default function Auth() {
                         <Button
                             variant="outline"
                             onClick={skipAuth}
-                            className="w-full flex items-center justify-center gap-2 group hover:border-primary/50 py-6 animate-guest-glow-bounce"
+                            className="w-full flex items-center justify-center gap-2 group hover:border-primary/50 py-6 animate-guest-glow-zoom"
                         >
                             <div className="p-1 px-2 rounded-md bg-secondary text-xs group-hover:bg-primary/20 group-hover:text-primary transition-colors">
                                 GUEST MODE
@@ -375,25 +358,6 @@ export default function Auth() {
                     </p>
                 </div>
             </footer>
-            {/* Sticky Mobile CTA */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-xl border-t border-border lg:hidden z-50 flex gap-3 safe-area-bottom animate-slide-up shadow-[0_-10px_40px_rgba(0,0,0,0.3)]">
-                <Button
-                    onClick={skipAuth}
-                    className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 h-12 text-sm font-bold shadow-lg animate-guest-glow-bounce"
-                >
-                    <Play className="w-4 h-4 mr-2" /> SKIP & VIEW DEMO
-                </Button>
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        const element = document.getElementById("auth-form");
-                        element?.scrollIntoView({ behavior: "smooth" });
-                    }}
-                    className="px-4 h-12 border-primary/20 hover:bg-primary/10"
-                >
-                    <LogIn className="w-4 h-4" />
-                </Button>
-            </div>
         </div>
     );
 }

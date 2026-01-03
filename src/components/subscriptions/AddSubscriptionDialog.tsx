@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ const iconOptions = [
     { value: "💳", label: "Other" },
 ];
 
-export function AddSubscriptionDialog({ open, onOpenChange, onSubmit, editingSubscription }: AddSubscriptionDialogProps) {
+export const AddSubscriptionDialog = memo(function AddSubscriptionDialog({ open, onOpenChange, onSubmit, editingSubscription }: AddSubscriptionDialogProps) {
     const [name, setName] = useState(editingSubscription?.name || "");
     const [amount, setAmount] = useState(editingSubscription?.amount?.toString() || "");
     const [billingCycle, setBillingCycle] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>(
@@ -185,4 +185,4 @@ export function AddSubscriptionDialog({ open, onOpenChange, onSubmit, editingSub
             </DialogContent>
         </Dialog>
     );
-}
+});

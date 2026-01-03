@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -38,7 +38,7 @@ interface AddTransactionDialogProps {
     categories: string[];
 }
 
-export function AddTransactionDialog({ type, categories }: AddTransactionDialogProps) {
+export const AddTransactionDialog = memo(function AddTransactionDialog({ type, categories }: AddTransactionDialogProps) {
     const [open, setOpen] = useState(false);
     const { addTransaction } = useTransactions();
 
@@ -195,4 +195,4 @@ export function AddTransactionDialog({ type, categories }: AddTransactionDialogP
             </DialogContent>
         </Dialog>
     );
-}
+});

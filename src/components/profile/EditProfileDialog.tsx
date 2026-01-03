@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,7 +21,7 @@ interface EditProfileDialogProps {
     onOpenChange: (open: boolean) => void;
 }
 
-export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps) {
+export const EditProfileDialog = memo(function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps) {
     const { user } = useAuth();
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -107,4 +107,4 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
             </DialogContent>
         </Dialog>
     );
-}
+});

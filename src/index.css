@@ -54,9 +54,9 @@
     /* Custom tokens */
     --gradient-primary: linear-gradient(135deg, hsl(187 100% 50%) 0%, hsl(160 100% 45%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(220 25% 12%) 0%, hsl(220 25% 8%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(187 100% 50% / 0.15) 0%, transparent 70%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(187 100% 50% / 0.1) 0%, transparent 70%);
 
-    --shadow-glow: 0 0 40px hsl(187 100% 50% / 0.2);
+    --shadow-glow: 0 0 20px hsl(187 100% 50% / 0.15);
     --shadow-card: 0 4px 24px hsl(220 30% 0% / 0.4);
     --shadow-elevated: 0 8px 32px hsl(220 30% 0% / 0.6);
 
@@ -111,9 +111,9 @@
 
     --gradient-primary: linear-gradient(135deg, hsl(187 100% 40%) 0%, hsl(160 100% 35%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(220 15% 98%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(187 100% 40% / 0.1) 0%, transparent 70%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(187 100% 40% / 0.08) 0%, transparent 70%);
 
-    --shadow-glow: 0 0 40px hsl(187 100% 40% / 0.15);
+    --shadow-glow: 0 0 20px hsl(187 100% 40% / 0.1);
     --shadow-card: 0 4px 24px hsl(220 30% 0% / 0.08);
     --shadow-elevated: 0 8px 32px hsl(220 30% 0% / 0.12);
   }
@@ -177,23 +177,20 @@
   }
 
   .animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
-    will-change: box-shadow;
+    animation: pulse-glow 30s ease-in-out infinite;
   }
 
-  .animate-bounce-subtle {
-    animation: bounce-subtle 2s ease-in-out infinite;
-    will-change: transform;
-  }
 
   .animate-glow-subtle {
-    animation: glow-subtle 2s ease-in-out infinite;
-    will-change: box-shadow;
+    animation: glow-subtle 30s ease-in-out infinite;
   }
 
-  .animate-guest-glow-bounce {
-    animation: bounce-subtle 3s ease-in-out infinite, glow-subtle 3s ease-in-out infinite;
-    will-change: transform, box-shadow;
+  .animate-guest-glow-zoom {
+    animation: pulse-zoom 30s ease-in-out infinite, glow-subtle 30s ease-in-out infinite;
+  }
+
+  .animate-slow-blink {
+    animation: slow-blink 30s ease-in-out infinite;
   }
 
   .animate-slide-up {
@@ -274,37 +271,54 @@
 
   0%,
   100% {
-    box-shadow: 0 0 20px hsl(187 100% 50% / 0.3);
+    box-shadow: 0 0 2px hsl(187 100% 50% / 0.03);
+    opacity: 0.8;
   }
 
   50% {
-    box-shadow: 0 0 40px hsl(187 100% 50% / 0.5);
+    box-shadow: 0 0 4px hsl(187 100% 50% / 0.06);
+    opacity: 1;
   }
 }
 
-@keyframes bounce-subtle {
+@keyframes pulse-zoom {
 
   0%,
   100% {
-    transform: translateY(0);
+    transform: scale(1);
   }
 
   50% {
-    transform: translateY(-6px);
+    transform: scale(1.02);
   }
 }
+
 
 @keyframes glow-subtle {
 
   0%,
   100% {
-    box-shadow: 0 0 15px hsl(var(--primary) / 0.15);
-    border-color: hsl(var(--primary) / 0.2);
+    box-shadow: 0 0 1px hsl(var(--primary) / 0.02);
+    border-color: hsl(var(--primary) / 0.05);
+    opacity: 0.85;
   }
 
   50% {
-    box-shadow: 0 0 30px hsl(var(--primary) / 0.4);
-    border-color: hsl(var(--primary) / 0.5);
+    box-shadow: 0 0 3px hsl(var(--primary) / 0.05);
+    border-color: hsl(var(--primary) / 0.1);
+    opacity: 1;
+  }
+}
+
+@keyframes slow-blink {
+
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+
+  50% {
+    opacity: 1;
   }
 }
 
